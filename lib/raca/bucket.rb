@@ -229,7 +229,11 @@ module Raca
     end
 
     def log(msg)
-      @logger.puts msg
+      if @logger.respond_to?(:debug)
+        @logger.debug msg
+      else
+        @logger.puts msg
+      end
     end
 
     def bucket_path
