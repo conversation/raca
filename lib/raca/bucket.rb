@@ -170,7 +170,7 @@ module Raca
     end
 
     def upload_io_large(key, io, byte_count)
-      segment_count = (byte_count.to_f / LARGE_FILE_SEGMENT_SIZE).floor + 1
+      segment_count = (byte_count.to_f / LARGE_FILE_SEGMENT_SIZE).ceil
       segments = []
       while segments.size < segment_count
         start_pos = 0 + (LARGE_FILE_SEGMENT_SIZE * segments.size)
