@@ -232,7 +232,7 @@ describe Raca::Bucket do
       end
 
       it 'should log the fact that it deleted the key' do
-        logger.should_receive(:puts).with('deleting key from /bucket_path/test')
+        logger.should_receive(:debug).with('deleting key from /bucket_path/test')
         cloud_bucket.delete('key')
       end
     end
@@ -250,7 +250,7 @@ describe Raca::Bucket do
       end
 
       it 'should log the fact that it deleted the key' do
-        logger.should_receive(:puts).with('Requesting /bucket_path/test/key to be purged from the CDN')
+        logger.should_receive(:debug).with('Requesting /bucket_path/test/key to be purged from the CDN')
         cloud_bucket.purge_from_akamai('key', 'services@theconversation.edu.au')
       end
     end
@@ -272,7 +272,7 @@ describe Raca::Bucket do
         end
 
         it 'should log the fact that it is about to download key' do
-          logger.should_receive(:puts).with('downloading key from /bucket_path/test')
+          logger.should_receive(:debug).with('downloading key from /bucket_path/test')
           cloud_bucket.download('key', @filepath)
         end
 
@@ -298,7 +298,7 @@ describe Raca::Bucket do
         end
 
         it 'should log the fact that it is about to download key' do
-          logger.should_receive(:puts).with('downloading key from /bucket_path/test')
+          logger.should_receive(:debug).with('downloading key from /bucket_path/test')
           lambda { cloud_bucket.download('key', @filepath) }.should raise_error
         end
       end
@@ -323,7 +323,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:puts).with("retrieving up to 1 of #{max} items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 1 of #{max} items from /bucket_path/test")
           cloud_bucket.list(max: max)
         end
 
@@ -332,7 +332,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it has done when complete' do
-          logger.should_receive(:puts).with("Got 1 items; we don't need any more.")
+          logger.should_receive(:debug).with("Got 1 items; we don't need any more.")
           cloud_bucket.list(max: max)
         end
       end
@@ -355,7 +355,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:puts).with("retrieving up to 10000 of 100000 items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 10000 of 100000 items from /bucket_path/test")
           cloud_bucket.list(max: max)
         end
 
@@ -364,7 +364,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it has done when complete' do
-          logger.should_receive(:puts).with("Got 1 items; there can't be any more.")
+          logger.should_receive(:debug).with("Got 1 items; there can't be any more.")
           cloud_bucket.list(max: max)
         end
       end
@@ -398,7 +398,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:puts).with("retrieving up to 10000 of 10001 items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 10000 of 10001 items from /bucket_path/test")
           cloud_bucket.list(max: max)
         end
 
@@ -407,7 +407,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it has done when complete' do
-          logger.should_receive(:puts).with("Got 10000 items; requesting 1 more.")
+          logger.should_receive(:debug).with("Got 10000 items; requesting 1 more.")
           cloud_bucket.list(max: max)
         end
       end
@@ -425,7 +425,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:puts).with("retrieving up to 1 of 1 items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /bucket_path/test")
           cloud_bucket.list(max: max, prefix: prefix)
         end
 
@@ -434,7 +434,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it has done when complete' do
-          logger.should_receive(:puts).with("Got 1 items; we don't need any more.")
+          logger.should_receive(:debug).with("Got 1 items; we don't need any more.")
           cloud_bucket.list(max: max, prefix: prefix)
         end
       end
@@ -453,7 +453,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it indends to do' do
-          logger.should_receive(:puts).with("retrieving bucket listing from /bucket_path/test items starting with #{search_term}")
+          logger.should_receive(:debug).with("retrieving bucket listing from /bucket_path/test items starting with #{search_term}")
           cloud_bucket.search(search_term)
         end
 
@@ -472,7 +472,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it indends to do' do
-          logger.should_receive(:puts).with("retrieving bucket listing from /bucket_path/test items starting with #{search_term}")
+          logger.should_receive(:debug).with("retrieving bucket listing from /bucket_path/test items starting with #{search_term}")
           cloud_bucket.search(search_term)
         end
 

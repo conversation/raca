@@ -16,11 +16,7 @@ module Raca
       raise ArgumentError, "The bucket name must not contain '/'." if bucket_name['/']
       @account, @bucket_name = account, bucket_name
       @logger = opts[:logger]
-      @logger ||= if defined?(Rails)
-                    Rails.logger
-                  else
-                    $stderr
-                  end
+      @logger ||= Rails.logger if defined?(Rails)
     end
 
     # Upload data_or_path (which may be a filename or an IO) to the bucket, as key.
@@ -231,8 +227,6 @@ module Raca
     def log(msg)
       if @logger.respond_to?(:debug)
         @logger.debug msg
-      else
-        @logger.puts msg
       end
     end
 
