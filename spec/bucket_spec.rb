@@ -596,6 +596,23 @@ describe Raca::Bucket do
         cloud_bucket.cdn_enable(60000)
       end
     end
+    describe '#set_temp_url_key' do
+      before(:each) do
+        stub_request(:post, "https://the_cloud.com/bucket_path").with(
+          :headers => {
+            'Accept'=>'*/*',
+            'X-Account-Meta-Temp-Url-Key'=>'secret',
+            'User-Agent'=>'Ruby',
+            'X-Auth-Token'=>'token'
+          }
+        ).to_return(:status => 201, :body => "")
+      end
+
+      it 'should log what it indends to do' do
+        logger.should_receieve(:debug).with('setting Account Temp URL Key on /bucket_path/test')
+        cloud_bucket.set_temp_url_key("secret")
+      end
+    end
     describe '#expiring_url' do
       it 'should returned a signed URL' do
         url = cloud_bucket.expiring_url("foo.txt", "secret", 1234567890)

@@ -143,6 +143,16 @@ module Raca
       cdn_request Net::HTTP::Put.new(bucket_path, "X-TTL" => ttl.to_i.to_s)
     end
 
+    # Set the secret key that will be used to generate expiring URLs for all cloud files containers on the current account. This value should be passed to the expiring_url() method.
+    #
+    # Use this with caution, this will invalidate all previously generated expiring URLS *FOR THE ENTIRE ACCOUNT*
+    #
+    def set_temp_url_key(secret)
+      log "setting Account Temp URL Key on #{account_path}"
+
+      storage_request Net::HTTP::Post.new(account_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
+    end
+
     # Generate a expiring URL for a file that is otherwise private. useful for providing temporary
     # access to files.
     #
