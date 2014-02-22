@@ -546,6 +546,38 @@ describe Raca::Bucket do
         cloud_bucket.cdn_metadata[:log_retention].should  == false
       end
     end
+    describe '#containers_metadata' do
+      before(:each) do
+        stub_request(:head, "https://the_cloud.com/bucket_path").with(
+          :headers => {
+            'Accept'=>'*/*',
+            'User-Agent'=>'Ruby',
+            'X-Auth-Token'=>'token'
+          }
+        ).to_return(
+          :status => 201,
+          :body => "",
+          :headers => {
+            'X-Account-Container-Count'=>'5',
+            'X-Account-Object-Count'=>'10',
+            'X-Account-Bytes-Used'=>'1024',
+          }
+        )
+      end
+
+      it 'should log what it indends to do' do
+        logger.should_receieve(:debug).with('retrieving containers metadata from /bucket_path/test')
+        cloud_bucket.containers_metadata
+      end
+
+      it 'should return a hash of results' do
+        cloud_bucket.containers_metadata.should == {
+          containers: 5,
+          objects: 10,
+          bytes: 1024,
+        }
+      end
+    end
 
     describe '#cdn_enable' do
       before(:each) do

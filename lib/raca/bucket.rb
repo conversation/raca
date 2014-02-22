@@ -123,6 +123,16 @@ module Raca
       }
     end
 
+    def containers_metadata
+      log "retrieving containers metadata from #{account_path}"
+      response    = storage_request(Net::HTTP::Head.new(account_path))
+      {
+        :containers => response["X-Account-Container-Count"].to_i,
+        :objects    => response["X-Account-Object-Count"].to_i,
+        :bytes      => response["X-Account-Bytes-Used"].to_i
+      }
+    end
+
     # use this with caution, it will make EVERY object in the bucket publicly available
     # via the CDN. CDN enabling can be done via the web UI but only with a TTL of 72 hours.
     # Using the API it's possible to set a TTL of 50 years.
@@ -246,6 +256,10 @@ module Raca
       if @logger.respond_to?(:debug)
         @logger.debug msg
       end
+    end
+
+    def account_path
+      @account_path ||= @account.path
     end
 
     def bucket_path
