@@ -9,7 +9,7 @@ describe Raca::Account do
 
   describe '#auth_token' do
     context "when the token is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => JSON.load(File.read(File.expand_path("../fixtures/identity_response_alt.json", __FILE__))) } }
+      let!(:cache) { {"raca-theuser" => JSON.load(File.read(File.expand_path("../fixtures/identity_response_alt.json", __FILE__))) } }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -32,7 +32,7 @@ describe Raca::Account do
 
   describe '#public_endpoint' do
     context "when the storage url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => JSON.load(File.read(File.expand_path("../fixtures/identity_response_alt.json", __FILE__))) } }
+      let!(:cache) { {"raca-theuser" => JSON.load(File.read(File.expand_path("../fixtures/identity_response_alt.json", __FILE__))) } }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do

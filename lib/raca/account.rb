@@ -49,7 +49,7 @@ module Raca
           {'Content-Type' => 'application/json'},
         )
         if response.is_a? Net::HTTPSuccess
-          cache_write("cloudfiles-data", JSON.load(response.body))
+          cache_write(cache_key, JSON.load(response.body))
         end
       }
     end
@@ -107,9 +107,13 @@ module Raca
     end
 
     def cloudfiles_data
-      refresh_cache unless cache_read("cloudfiles-data")
+      refresh_cache unless cache_read(cache_key)
 
-      cache_read("cloudfiles-data") || {}
+      cache_read(cache_key) || {}
+    end
+
+    def cache_key
+      "raca-#{@username}"
     end
 
   end
