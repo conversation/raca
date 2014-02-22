@@ -21,7 +21,7 @@ describe Raca::Account do
 
   describe '#auth_token' do
     context "when the token is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {auth_token: "foo"}} }
+      let!(:cache) { {"raca-theuser" => {auth_token: "foo"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -44,7 +44,7 @@ describe Raca::Account do
 
   describe '#storage_host' do
     context "when the storage url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {storage_url: "https://example.com/foo"}} }
+      let!(:cache) { {"raca-theuser" => {storage_url: "https://example.com/foo"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -67,7 +67,7 @@ describe Raca::Account do
 
   describe '#cdn_host' do
     context "when the cdn url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {cdn_url: "https://example.com/foo"}} }
+      let!(:cache) { {"raca-theuser" => {cdn_url: "https://example.com/foo"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -90,7 +90,7 @@ describe Raca::Account do
 
   describe '#path' do
     context "when the storage url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {storage_url: "https://example.com/filepath"}} }
+      let!(:cache) { {"raca-theuser" => {storage_url: "https://example.com/filepath"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -113,7 +113,7 @@ describe Raca::Account do
 
   describe '#server_host' do
     context "when the server url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {server_url: "https://example.com/serverpath"}} }
+      let!(:cache) { {"raca-theuser" => {server_url: "https://example.com/serverpath"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -136,7 +136,7 @@ describe Raca::Account do
 
   describe '#server_path' do
     context "when the server url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {server_url: "https://example.com/serverpath"}} }
+      let!(:cache) { {"raca-theuser" => {server_url: "https://example.com/serverpath"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -159,7 +159,7 @@ describe Raca::Account do
 
   describe '#ngserver_host' do
     context "when the server url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {ngserver_url: "https://example.com/ngserverpath"}} }
+      let!(:cache) { {"raca-theuser" => {ngserver_url: "https://example.com/ngserverpath"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
@@ -182,7 +182,7 @@ describe Raca::Account do
 
   describe '#ngserver_path' do
     context "when the server url is pre-cached" do
-      let!(:cache) { {"cloudfiles-data" => {ngserver_url: "https://example.com/ngserverpath"}} }
+      let!(:cache) { {"raca-theuser" => {ngserver_url: "https://example.com/ngserverpath"}} }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do

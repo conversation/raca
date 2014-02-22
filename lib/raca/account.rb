@@ -72,7 +72,7 @@ module Raca
         )
         if response.is_a? Net::HTTPSuccess
           json_data = JSON.load(response.body)
-          cache_write("cloudfiles-data", {
+          cache_write(cache_key, {
             auth_token: extract_value(json_data, "access", "token", "id"),
             storage_url: ord_cloudfiles_url(json_data),
             server_url: cloudserver_url(json_data),
@@ -193,9 +193,13 @@ module Raca
     end
 
     def cloudfiles_data
-      refresh_cache unless cache_read("cloudfiles-data")
+      refresh_cache unless cache_read(cache_key)
 
-      cache_read("cloudfiles-data") || {}
+      cache_read(cache_key) || {}
+    end
+
+    def cache_key
+      @cache_key ||= "raca-#{@username}"
     end
 
   end
