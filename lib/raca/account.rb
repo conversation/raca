@@ -106,11 +106,6 @@ module Raca
       end
     end
 
-    def app_config
-      filename = File.dirname(__FILE__) + "/../../config/application.yml"
-      @app_config ||= YAML.load_file(filename)
-    end
-
     def cloudfiles_data
       refresh_cache unless cache_read("cloudfiles-data")
 
