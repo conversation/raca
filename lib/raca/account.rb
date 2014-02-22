@@ -22,35 +22,13 @@ module Raca
     end
 
     def auth_token
-      cloudfiles_data[:auth_token]
+      extract_value(cloudfiles_data, "access", "token", "id")
     end
 
-    def storage_host
-      URI.parse(cloudfiles_data[:storage_url]).host
-    end
-
-    def cdn_host
-      URI.parse(cloudfiles_data[:cdn_url]).host
-    end
-
-    def path
-      URI.parse(cloudfiles_data[:storage_url]).path
-    end
-
-    def server_host
-      URI.parse(cloudfiles_data[:server_url]).host
-    end
-
-    def server_path
-      URI.parse(cloudfiles_data[:server_url]).path
-    end
-
-    def ngserver_host
-      URI.parse(cloudfiles_data[:ngserver_url]).host
-    end
-
-    def ngserver_path
-      URI.parse(cloudfiles_data[:ngserver_url]).path
+    def public_endpoint(service_name, region)
+      endpoints = service_endpoints(service_name)
+      regional_endpoint = endpoints.detect { |e| e["region"] == region } || {}
+      regional_endpoint["publicURL"]
     end
 
     def refresh_cache
@@ -71,14 +49,7 @@ module Raca
           {'Content-Type' => 'application/json'},
         )
         if response.is_a? Net::HTTPSuccess
-          json_data = JSON.load(response.body)
-          cache_write("cloudfiles-data", {
-            auth_token: extract_value(json_data, "access", "token", "id"),
-            storage_url: ord_cloudfiles_url(json_data),
-            server_url: cloudserver_url(json_data),
-            ngserver_url: ngcloudserver_url(json_data),
-            cdn_url: ord_cloudcdn_url(json_data)
-          })
+          cache_write("cloudfiles-data", JSON.load(response.body))
         end
       }
     end
@@ -110,65 +81,13 @@ module Raca
       end
     end
 
-    # The API URL we should use to control cloud files in ORD
+    # An array of all the endpoints for a particular service (like cloud files,
+    # cloud servers, dns, etc)
     #
-    def ord_cloudfiles_url(data)
-      endpoints = cloudfiles_catalog(data)["endpoints"] || []
-      ord = endpoints.detect { |e| e["region"] == "ORD" } || {}
-      ord["publicURL"]
-    end
-
-    # An array of all cloudfiles regions
-    #
-    def cloudfiles_catalog(data)
-      catalog = extract_value(data, "access", "serviceCatalog") || {}
-      catalog.detect { |s| s["name"] == "cloudFiles" } || {}
-    end
-
-    # The API URL we should use to control cloud files CDN in ORD
-    #
-    def ord_cloudcdn_url(data)
-      endpoints = cloudcdn_catalog(data)["endpoints"] || []
-      ord = endpoints.detect { |e| e["region"] == "ORD" } || {}
-      ord["publicURL"]
-    end
-
-    # An array of all cloudfiles CDN regions
-    #
-    def cloudcdn_catalog(data)
-      catalog = extract_value(data, "access", "serviceCatalog") || {}
-      catalog.detect { |s| s["name"] == "cloudFilesCDN" } || {}
-    end
-
-    # The API URL we should use to control original cloud servers. They're all
-    # in ORD so we don't get a choice.
-    #
-    def cloudserver_url(data)
-      endpoints = cloudserver_catalog(data)["endpoints"] || []
-      endpoint = endpoints.first || {}
-      endpoint["publicURL"]
-    end
-
-    # An array of all 1st gen cloud server regions
-    #
-    def cloudserver_catalog(data)
-      catalog = extract_value(data, "access", "serviceCatalog") || {}
-      catalog.detect { |s| s["name"] == "cloudServers" } || {}
-    end
-
-    # The API URL we should use to control next gen cloud servers.
-    #
-    def ngcloudserver_url(data)
-      endpoints = ngcloudserver_catalog(data)["endpoints"] || []
-      ord = endpoints.detect { |e| e["region"] == "ORD" } || {}
-      ord["publicURL"]
-    end
-
-    # An array of all next gen cloud server regions
-    #
-    def ngcloudserver_catalog(data)
-      catalog = extract_value(data, "access", "serviceCatalog") || {}
-      catalog.detect { |s| s["name"] == "cloudServersOpenStack" } || {}
+    def service_endpoints(service_name)
+      catalog = extract_value(cloudfiles_data, "access", "serviceCatalog") || {}
+      service = catalog.detect { |s| s["name"] == service_name } || {}
+      service["endpoints"] || []
     end
 
     def cache_read(key)
