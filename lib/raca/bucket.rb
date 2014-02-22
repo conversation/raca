@@ -1,5 +1,6 @@
 require 'net/http'
 require 'digest/md5'
+require 'openssl'
 
 module Raca
   # Handy abstraction for interacting with a single Cloud Files container. We
@@ -130,6 +131,23 @@ module Raca
       log "enabling CDN access to #{bucket_path} with a cache expiry of #{ttl / 60} minutes"
 
       cdn_request Net::HTTP::Put.new(bucket_path, "X-TTL" => ttl.to_i.to_s)
+    end
+
+    # Generate a expiring URL for a file that is otherwise private. useful for providing temporary
+    # access to files.
+    #
+    def expiring_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
+      digest = OpenSSL::Digest::Digest.new('sha1')
+
+      method  = 'GET'
+      expires = expires_at.to_i
+      path    = File.join(bucket_path, object_key)
+      data    = "#{method}\n#{expires}\n#{path}"
+
+      hmac    = OpenSSL::HMAC.new(temp_url_key, digest)
+      hmac << data
+
+      "https://#{@account.storage_host}#{path}?temp_url_sig=#{hmac.hexdigest}&temp_url_expires=#{expires}"
     end
 
     private

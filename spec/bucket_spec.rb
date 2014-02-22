@@ -564,5 +564,11 @@ describe Raca::Bucket do
         cloud_bucket.cdn_enable(60000)
       end
     end
+    describe '#expiring_url' do
+      it 'should returned a signed URL' do
+        url = cloud_bucket.expiring_url("foo.txt", "secret", 1234567890)
+        url.should == "https://the_cloud.com/bucket_path/test/foo.txt?temp_url_sig=d71fda98474a8ea5ed6eb84fa50cf868f8759db3&temp_url_expires=1234567890"
+      end
+    end
   end
 end
