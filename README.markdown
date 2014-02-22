@@ -24,19 +24,20 @@ a taste of the basics.
 ### Identity
 
     account = Raca::Account.new("username", "api_key")
-    puts account.cdn_host
-    puts account.ngserver_path
+    puts account.auth_token
+    puts account.public_endpoint("cloudFiles", "ORD")
+    puts account.service_endpoint("cloudFiles", "ORD")
 
 ### Cloud Files
 
     account = Raca::Account.new("username", "api_key")
-    dir = Raca::Bucket.new(account, "foo")
+    dir = account.containers(:ord).get("foo")
     puts dir.list
 
 ### Cloud Servers
 
     account = Raca::Account.new("username", "api_key")
-    server = Raca::Server.new(account, "foo")
+    server = account.servers(:ord).get("foo")
     puts server.public_addresses
 
 ## Compatibility
