@@ -10,21 +10,20 @@ describe Raca::Bucket do
   describe '#initialization' do
     let!(:account) {
       info = double(Raca::Account)
-      info.stub(:storage_host).and_return("the_cloud.com")
-      info.stub(:cdn_host).and_return("cdn.the_cloud.com")
-      info.stub(:path).and_return("/bucket_path")
+      info.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+      info.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
       info.stub(:auth_token).and_return('token')
       info.stub(:refresh_cache).and_return(true)
       info
     }
 
     it 'should raise an argument error if the supplied bucket name contains a "/"' do
-      lambda { Raca::Bucket.new(account, 'a_broken_bucket_name/') }.should raise_error(ArgumentError)
+      lambda { Raca::Bucket.new(account, :ord, 'a_broken_bucket_name/') }.should raise_error(ArgumentError)
     end
 
     it 'should set the bucket_name atttribute' do
       bucket = 'mah_buckit'
-      Raca::Bucket.new(account, bucket).bucket_name.should eql(bucket)
+      Raca::Bucket.new(account, :ord, bucket).bucket_name.should eql(bucket)
     end
 
   end
@@ -35,20 +34,19 @@ describe Raca::Bucket do
   describe "metadata request with stale auth details" do
     let!(:account) {
       info = double(Raca::Account)
-      info.stub(:storage_host).and_return("the_cloud.com")
-      info.stub(:cdn_host).and_return("cdn.the_cloud.com")
-      info.stub(:path).and_return("/bucket_path")
+      info.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+      info.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
       info.stub(:auth_token).and_return('stale_token','fresh_token')
       info.stub(:refresh_cache).and_return(true)
       info
     }
-    let!(:cloud_bucket) { Raca::Bucket.new(account, 'test') }
+    let!(:cloud_bucket) { Raca::Bucket.new(account, :ord, 'test') }
 
     before(:each) do
-      stub_request(:head, "https://the_cloud.com/bucket_path/test").with(
+      stub_request(:head, "https://the-cloud.com/account/test").with(
         :headers => {'X-Auth-Token'=>'stale_token'}
       ).to_return(:status => 401, :body => "")
-      stub_request(:head, "https://the_cloud.com/bucket_path/test").with(
+      stub_request(:head, "https://the-cloud.com/account/test").with(
         :headers => {'X-Auth-Token'=>'fresh_token'}
       ).to_return(
         :status => 200,
@@ -64,22 +62,21 @@ describe Raca::Bucket do
   describe 'instance method: ' do
     let!(:account) {
       info = double(Raca::Account)
-      info.stub(:storage_host).and_return("the_cloud.com")
-      info.stub(:cdn_host).and_return("cdn.the_cloud.com")
-      info.stub(:path).and_return("/bucket_path")
+      info.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+      info.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
       info.stub(:auth_token).and_return('token')
       info.stub(:refresh_cache).and_return(true)
       info
     }
     let!(:logger) { double(Object).as_null_object }
-    let!(:cloud_bucket) { Raca::Bucket.new(account, 'test', logger: logger) }
+    let!(:cloud_bucket) { Raca::Bucket.new(account, :ord, 'test', logger: logger) }
 
     describe '#upload' do
       context 'with a StringIO object' do
         let(:data_or_path) { StringIO.new('some string', 'r') }
 
         before(:each) do
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :body => "some string",
             :headers => {
               'Accept'=>'*/*',
@@ -98,7 +95,7 @@ describe Raca::Bucket do
 
       context 'with a File object' do
         before(:each) do
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {
               'Accept'=>'*/*',
               'Content-Length'=>'0',
@@ -121,7 +118,7 @@ describe Raca::Bucket do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {
               'Accept'=>'*/*',
               'Content-Length'=>'0',
@@ -147,25 +144,25 @@ describe Raca::Bucket do
         end
 
         before(:each) do
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key.000").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key.000").with(
             :headers => {
               'Content-Length'=>'3',
               'X-Auth-Token'=>'token'
             }
           ).to_return(:status => 200, :body => "", :headers => {ETag: "1" })
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key.001").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key.001").with(
             :headers => {
               'Content-Length'=>'3',
               'X-Auth-Token'=>'token'
             }
           ).to_return(:status => 200, :body => "", :headers => {ETag: "2" })
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key.002").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key.002").with(
             :headers => {
               'Content-Length'=>'1',
               'X-Auth-Token'=>'token'
             }
           ).to_return(:status => 200, :body => "", :headers => {ETag: "3" })
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key?multipart-manifest=put").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key?multipart-manifest=put").with(
             :body => %Q{[{"path":"test/key.000","etag":"1","size_bytes":3},{"path":"test/key.001","etag":"2","size_bytes":3},{"path":"test/key.002","etag":"3","size_bytes":1}]},
             :headers => {
               'Content-Length'=>'151',
@@ -183,7 +180,7 @@ describe Raca::Bucket do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
             :status => 200, :body => "", :headers => {}
@@ -199,7 +196,7 @@ describe Raca::Bucket do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_request(:put, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error, Timeout::Error, Timeout::Error)
         end
@@ -222,7 +219,7 @@ describe Raca::Bucket do
 
     describe '#delete' do
       before(:each) do
-        stub_request(:delete, "https://the_cloud.com/bucket_path/test/key").with(
+        stub_request(:delete, "https://the-cloud.com/account/test/key").with(
           :headers => {
             'Accept'=>'*/*',
             'User-Agent'=>'Ruby',
@@ -232,14 +229,14 @@ describe Raca::Bucket do
       end
 
       it 'should log the fact that it deleted the key' do
-        logger.should_receive(:debug).with('deleting key from /bucket_path/test')
+        logger.should_receive(:debug).with('deleting key from /account/test')
         cloud_bucket.delete('key')
       end
     end
 
     describe '#purge_from_akamai' do
       before(:each) do
-        stub_request(:delete, "https://cdn.the_cloud.com/bucket_path/test/key").with(
+        stub_request(:delete, "https://cdn.the-cloud.com/account/test/key").with(
           :headers => {
             'Accept'=>'*/*',
             'User-Agent'=>'Ruby',
@@ -250,7 +247,7 @@ describe Raca::Bucket do
       end
 
       it 'should log the fact that it deleted the key' do
-        logger.should_receive(:debug).with('Requesting /bucket_path/test/key to be purged from the CDN')
+        logger.should_receive(:debug).with('Requesting /account/test/key to be purged from the CDN')
         cloud_bucket.purge_from_akamai('key', 'services@theconversation.edu.au')
       end
     end
@@ -259,7 +256,7 @@ describe Raca::Bucket do
       context 'successfully calling cloud_request' do
         before(:each) do
           @body = 'The response has this as the body'
-          stub_request(:get, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:get, "https://the-cloud.com/account/test/key").with(
             :headers => {
               'Accept'=>'*/*',
               'User-Agent'=>'Ruby',
@@ -272,7 +269,7 @@ describe Raca::Bucket do
         end
 
         it 'should log the fact that it is about to download key' do
-          logger.should_receive(:debug).with('downloading key from /bucket_path/test')
+          logger.should_receive(:debug).with('downloading key from /account/test')
           cloud_bucket.download('key', @filepath)
         end
 
@@ -288,7 +285,7 @@ describe Raca::Bucket do
 
       context 'unsuccessfully calling cloud_request' do
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test/key").with(
+          stub_request(:get, "https://the-cloud.com/account/test/key").with(
             :headers => {
               'Accept'=>'*/*',
               'User-Agent'=>'Ruby',
@@ -298,7 +295,7 @@ describe Raca::Bucket do
         end
 
         it 'should log the fact that it is about to download key' do
-          logger.should_receive(:debug).with('downloading key from /bucket_path/test')
+          logger.should_receive(:debug).with('downloading key from /account/test')
           lambda { cloud_bucket.download('key', @filepath) }.should raise_error
         end
       end
@@ -309,7 +306,7 @@ describe Raca::Bucket do
         let(:max) { 1 }
 
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=1").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=1").with(
             :headers => {
               'Accept'=>'*/*',
               'User-Agent'=>'Ruby',
@@ -323,7 +320,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 1 of #{max} items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 1 of #{max} items from /account/test")
           cloud_bucket.list(max: max)
         end
 
@@ -341,7 +338,7 @@ describe Raca::Bucket do
         let(:max) { 100000 }
 
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=10000").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=10000").with(
             :headers => {
               'Accept'=>'*/*',
               'User-Agent'=>'Ruby',
@@ -355,7 +352,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 10000 of 100000 items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 10000 of 100000 items from /account/test")
           cloud_bucket.list(max: max)
         end
 
@@ -373,7 +370,7 @@ describe Raca::Bucket do
         let(:max) { 10001 }
 
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=10000").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=10000").with(
             :headers => {
               'Accept'=>'*/*',
               'User-Agent'=>'Ruby',
@@ -384,7 +381,7 @@ describe Raca::Bucket do
             :body => "The response has this as the body\n"*10000,
             :headers => {}
           )
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=1&marker=The%20response%20has%20this%20as%20the%20body").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=1&marker=The%20response%20has%20this%20as%20the%20body").with(
             :headers => {
               'Accept'=>'*/*',
               'User-Agent'=>'Ruby',
@@ -398,7 +395,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 10000 of 10001 items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 10000 of 10001 items from /account/test")
           cloud_bucket.list(max: max)
         end
 
@@ -417,7 +414,7 @@ describe Raca::Bucket do
         let(:prefix) { "assets/"}
 
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=1&prefix=assets/").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=1&prefix=assets/").with(
             :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
           ).to_return(
             :status => 200, :body => "assets/foo.css\n", :headers => {}
@@ -425,7 +422,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /bucket_path/test")
+          logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /account/test")
           cloud_bucket.list(max: max, prefix: prefix)
         end
 
@@ -445,7 +442,7 @@ describe Raca::Bucket do
 
       context '3 results found' do
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=10000&prefix=foo").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=10000&prefix=foo").with(
             :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
           ).to_return(
             :status => 200, :body => "result\n"*3, :headers => {}
@@ -453,7 +450,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it indends to do' do
-          logger.should_receive(:debug).with("retrieving bucket listing from /bucket_path/test items starting with #{search_term}")
+          logger.should_receive(:debug).with("retrieving bucket listing from /account/test items starting with #{search_term}")
           cloud_bucket.search(search_term)
         end
 
@@ -464,7 +461,7 @@ describe Raca::Bucket do
 
       context 'no results found' do
         before(:each) do
-          stub_request(:get, "https://the_cloud.com/bucket_path/test?limit=10000&prefix=foo").with(
+          stub_request(:get, "https://the-cloud.com/account/test?limit=10000&prefix=foo").with(
             :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
           ).to_return(
             :status => 200, :body => "", :headers => {}
@@ -472,7 +469,7 @@ describe Raca::Bucket do
         end
 
         it 'should log what it indends to do' do
-          logger.should_receive(:debug).with("retrieving bucket listing from /bucket_path/test items starting with #{search_term}")
+          logger.should_receive(:debug).with("retrieving bucket listing from /account/test items starting with #{search_term}")
           cloud_bucket.search(search_term)
         end
 
@@ -484,7 +481,7 @@ describe Raca::Bucket do
 
     describe '#metadata' do
       before(:each) do
-        stub_request(:head, "https://the_cloud.com/bucket_path/test").with(
+        stub_request(:head, "https://the-cloud.com/account/test").with(
           :headers => {
             'Accept'=>'*/*',
             'User-Agent'=>'Ruby',
@@ -501,7 +498,7 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving bucket metadata from /bucket_path/test')
+        logger.should_receieve(:debug).with('retrieving bucket metadata from /account/test')
         cloud_bucket.metadata
       end
 
@@ -512,7 +509,7 @@ describe Raca::Bucket do
 
     describe '#cdn_metadata' do
       before(:each) do
-        stub_request(:head, "https://cdn.the_cloud.com/bucket_path/test").with(
+        stub_request(:head, "https://cdn.the-cloud.com/account/test").with(
           :headers => {
             'Accept'=>'*/*',
             'User-Agent'=>'Ruby',
@@ -533,7 +530,7 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving bucket CDN metadata from /bucket_path/test')
+        logger.should_receieve(:debug).with('retrieving bucket CDN metadata from /account/test')
         cloud_bucket.cdn_metadata
       end
 
@@ -548,7 +545,7 @@ describe Raca::Bucket do
     end
     describe '#containers_metadata' do
       before(:each) do
-        stub_request(:head, "https://the_cloud.com/bucket_path").with(
+        stub_request(:head, "https://the-cloud.com/account").with(
           :headers => {
             'Accept'=>'*/*',
             'User-Agent'=>'Ruby',
@@ -566,7 +563,7 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving containers metadata from /bucket_path/test')
+        logger.should_receieve(:debug).with('retrieving containers metadata from /account/test')
         cloud_bucket.containers_metadata
       end
 
@@ -581,7 +578,7 @@ describe Raca::Bucket do
 
     describe '#cdn_enable' do
       before(:each) do
-        stub_request(:put, "https://cdn.the_cloud.com/bucket_path/test").with(
+        stub_request(:put, "https://cdn.the-cloud.com/account/test").with(
           :headers => {
             'Accept'=>'*/*',
             'X-TTL'=>'60000',
@@ -592,13 +589,13 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('enabling CDN access to /bucket_path/test with a cache expiry of 1000 minutes')
+        logger.should_receieve(:debug).with('enabling CDN access to /account/test with a cache expiry of 1000 minutes')
         cloud_bucket.cdn_enable(60000)
       end
     end
     describe '#set_temp_url_key' do
       before(:each) do
-        stub_request(:post, "https://the_cloud.com/bucket_path").with(
+        stub_request(:post, "https://the-cloud.com/account").with(
           :headers => {
             'Accept'=>'*/*',
             'X-Account-Meta-Temp-Url-Key'=>'secret',
@@ -609,14 +606,14 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('setting Account Temp URL Key on /bucket_path/test')
+        logger.should_receieve(:debug).with('setting Account Temp URL Key on /account/test')
         cloud_bucket.set_temp_url_key("secret")
       end
     end
     describe '#expiring_url' do
       it 'should returned a signed URL' do
         url = cloud_bucket.expiring_url("foo.txt", "secret", 1234567890)
-        url.should == "https://the_cloud.com/bucket_path/test/foo.txt?temp_url_sig=d71fda98474a8ea5ed6eb84fa50cf868f8759db3&temp_url_expires=1234567890"
+        url.should == "https://the-cloud.com/account/test/foo.txt?temp_url_sig=596355666ef72a9da6b03de32e9dd4ac003ee9be&temp_url_expires=1234567890"
       end
     end
   end

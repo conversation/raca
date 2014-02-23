@@ -1,6 +1,7 @@
 require 'net/http'
 require 'digest/md5'
 require 'openssl'
+require 'uri'
 
 module Raca
   # Handy abstraction for interacting with a single Cloud Files container. We
@@ -13,9 +14,11 @@ module Raca
 
     attr_reader :bucket_name
 
-    def initialize(account, bucket_name, opts = {})
+    def initialize(account, region, bucket_name, opts = {})
       raise ArgumentError, "The bucket name must not contain '/'." if bucket_name['/']
-      @account, @bucket_name = account, bucket_name
+      @account, @region, @bucket_name = account, region, bucket_name
+      @storage_url = @account.public_endpoint("cloudFiles", region)
+      @cdn_url     = @account.public_endpoint("cloudFilesCDN", region)
       @logger = opts[:logger]
       @logger ||= Rails.logger if defined?(Rails)
     end
@@ -124,8 +127,8 @@ module Raca
     end
 
     def containers_metadata
-      log "retrieving containers metadata from #{account_path}"
-      response    = storage_request(Net::HTTP::Head.new(account_path))
+      log "retrieving containers metadata from #{storage_path}"
+      response    = storage_request(Net::HTTP::Head.new(storage_path))
       {
         :containers => response["X-Account-Container-Count"].to_i,
         :objects    => response["X-Account-Object-Count"].to_i,
@@ -148,9 +151,9 @@ module Raca
     # Use this with caution, this will invalidate all previously generated expiring URLS *FOR THE ENTIRE ACCOUNT*
     #
     def set_temp_url_key(secret)
-      log "setting Account Temp URL Key on #{account_path}"
+      log "setting Account Temp URL Key on #{storage_path}"
 
-      storage_request Net::HTTP::Post.new(account_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
+      storage_request Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
     end
 
     # Generate a expiring URL for a file that is otherwise private. useful for providing temporary
@@ -167,7 +170,7 @@ module Raca
       hmac    = OpenSSL::HMAC.new(temp_url_key, digest)
       hmac << data
 
-      "https://#{@account.storage_host}#{path}?temp_url_sig=#{hmac.hexdigest}&temp_url_expires=#{expires}"
+      "https://#{storage_host}#{path}?temp_url_sig=#{hmac.hexdigest}&temp_url_expires=#{expires}"
     end
 
     private
@@ -220,11 +223,11 @@ module Raca
     end
 
     def cdn_request(request, &block)
-      cloud_request(request, @account.cdn_host, &block)
+      cloud_request(request, cdn_host, &block)
     end
 
     def storage_request(request, &block)
-      cloud_request(request, @account.storage_host, &block)
+      cloud_request(request, storage_host, &block)
     end
 
     def cloud_request(request, hostname, retries = 0, &block)
@@ -268,12 +271,24 @@ module Raca
       end
     end
 
-    def account_path
-      @account_path ||= @account.path
+    def storage_host
+      URI.parse(@storage_url).host
+    end
+
+    def storage_path
+      URI.parse(@storage_url).path
+    end
+
+    def cdn_host
+      URI.parse(@cdn_url).host
+    end
+
+    def cdn_path
+      URI.parse(@cdn_url).path
     end
 
     def bucket_path
-      @bucket_path ||= File.join(@account.path, bucket_name)
+      @bucket_path ||= File.join(storage_path, bucket_name)
     end
 
     def file_content_type(path)

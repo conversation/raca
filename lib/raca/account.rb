@@ -26,9 +26,14 @@ module Raca
     end
 
     def public_endpoint(service_name, region)
+      region = region.to_s.upcase
       endpoints = service_endpoints(service_name)
       regional_endpoint = endpoints.detect { |e| e["region"] == region } || {}
       regional_endpoint["publicURL"]
+    end
+
+    def containers(region)
+      Raca::Containers.new(self, region)
     end
 
     def refresh_cache
