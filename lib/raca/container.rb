@@ -126,16 +126,6 @@ module Raca
       }
     end
 
-    def containers_metadata
-      log "retrieving containers metadata from #{storage_path}"
-      response    = storage_request(Net::HTTP::Head.new(storage_path))
-      {
-        :containers => response["X-Account-Container-Count"].to_i,
-        :objects    => response["X-Account-Object-Count"].to_i,
-        :bytes      => response["X-Account-Bytes-Used"].to_i
-      }
-    end
-
     # use this with caution, it will make EVERY object in the container publicly available
     # via the CDN. CDN enabling can be done via the web UI but only with a TTL of 72 hours.
     # Using the API it's possible to set a TTL of 50 years.
@@ -144,16 +134,6 @@ module Raca
       log "enabling CDN access to #{container_path} with a cache expiry of #{ttl / 60} minutes"
 
       cdn_request Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s)
-    end
-
-    # Set the secret key that will be used to generate expiring URLs for all cloud files containers on the current account. This value should be passed to the expiring_url() method.
-    #
-    # Use this with caution, this will invalidate all previously generated expiring URLS *FOR THE ENTIRE ACCOUNT*
-    #
-    def set_temp_url_key(secret)
-      log "setting Account Temp URL Key on #{storage_path}"
-
-      storage_request Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
     end
 
     # Generate a expiring URL for a file that is otherwise private. useful for providing temporary

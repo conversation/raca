@@ -543,38 +543,6 @@ describe Raca::Container do
         cloud_container.cdn_metadata[:log_retention].should  == false
       end
     end
-    describe '#containers_metadata' do
-      before(:each) do
-        stub_request(:head, "https://the-cloud.com/account").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(
-          :status => 201,
-          :body => "",
-          :headers => {
-            'X-Account-Container-Count'=>'5',
-            'X-Account-Object-Count'=>'10',
-            'X-Account-Bytes-Used'=>'1024',
-          }
-        )
-      end
-
-      it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving containers metadata from /account/test')
-        cloud_container.containers_metadata
-      end
-
-      it 'should return a hash of results' do
-        cloud_container.containers_metadata.should == {
-          containers: 5,
-          objects: 10,
-          bytes: 1024,
-        }
-      end
-    end
 
     describe '#cdn_enable' do
       before(:each) do
@@ -591,23 +559,6 @@ describe Raca::Container do
       it 'should log what it indends to do' do
         logger.should_receieve(:debug).with('enabling CDN access to /account/test with a cache expiry of 1000 minutes')
         cloud_container.cdn_enable(60000)
-      end
-    end
-    describe '#set_temp_url_key' do
-      before(:each) do
-        stub_request(:post, "https://the-cloud.com/account").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'X-Account-Meta-Temp-Url-Key'=>'secret',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(:status => 201, :body => "")
-      end
-
-      it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('setting Account Temp URL Key on /account/test')
-        cloud_container.set_temp_url_key("secret")
       end
     end
     describe '#expiring_url' do
