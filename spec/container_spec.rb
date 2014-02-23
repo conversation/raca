@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Raca::Bucket do
+describe Raca::Container do
 
   describe "MAX_ITEMS_PER_LIST" do
-    subject { Raca::Bucket::MAX_ITEMS_PER_LIST }
+    subject { Raca::Container::MAX_ITEMS_PER_LIST }
     it { should eql(10_000) }
   end
 
@@ -17,18 +17,18 @@ describe Raca::Bucket do
       info
     }
 
-    it 'should raise an argument error if the supplied bucket name contains a "/"' do
-      lambda { Raca::Bucket.new(account, :ord, 'a_broken_bucket_name/') }.should raise_error(ArgumentError)
+    it 'should raise an argument error if the supplied container name contains a "/"' do
+      lambda { Raca::Container.new(account, :ord, 'a_broken_container_name/') }.should raise_error(ArgumentError)
     end
 
-    it 'should set the bucket_name atttribute' do
-      bucket = 'mah_buckit'
-      Raca::Bucket.new(account, :ord, bucket).bucket_name.should eql(bucket)
+    it 'should set the container_name atttribute' do
+      container = 'mah_buckit'
+      Raca::Container.new(account, :ord, container).container_name.should eql(container)
     end
 
   end
 
-  # This spec could be written for any public method on Raca::Bucket. The point
+  # This spec could be written for any public method on Raca::Container. The point
   # is to test the automatic retry after receiving a 401 response, not to test the
   # metadata method itself
   describe "metadata request with stale auth details" do
@@ -40,7 +40,7 @@ describe Raca::Bucket do
       info.stub(:refresh_cache).and_return(true)
       info
     }
-    let!(:cloud_bucket) { Raca::Bucket.new(account, :ord, 'test') }
+    let!(:cloud_container) { Raca::Container.new(account, :ord, 'test') }
 
     before(:each) do
       stub_request(:head, "https://the-cloud.com/account/test").with(
@@ -55,7 +55,7 @@ describe Raca::Bucket do
     end
 
     it "should automatically re-auth and try again" do
-      cloud_bucket.metadata.should eql({:objects => 5, :bytes => 1200})
+      cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
     end
   end
 
@@ -69,7 +69,7 @@ describe Raca::Bucket do
       info
     }
     let!(:logger) { double(Object).as_null_object }
-    let!(:cloud_bucket) { Raca::Bucket.new(account, :ord, 'test', logger: logger) }
+    let!(:cloud_container) { Raca::Container.new(account, :ord, 'test', logger: logger) }
 
     describe '#upload' do
       context 'with a StringIO object' do
@@ -89,7 +89,7 @@ describe Raca::Bucket do
         end
 
         it "should call upload_io" do
-          cloud_bucket.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
         end
       end
 
@@ -109,7 +109,7 @@ describe Raca::Bucket do
 
         it "should call upload_io" do
           File.open(File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt'), 'r') do |data_or_path|
-            cloud_bucket.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+            cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
           end
         end
       end
@@ -131,7 +131,7 @@ describe Raca::Bucket do
         end
 
         it "should call upload_io" do
-          cloud_bucket.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
         end
       end
 
@@ -139,8 +139,8 @@ describe Raca::Bucket do
         let(:data_or_path) { StringIO.new("abcdefg") }
 
         before do
-          stub_const("Raca::Bucket::LARGE_FILE_THRESHOLD", 3)
-          stub_const("Raca::Bucket::LARGE_FILE_SEGMENT_SIZE", 3)
+          stub_const("Raca::Container::LARGE_FILE_THRESHOLD", 3)
+          stub_const("Raca::Container::LARGE_FILE_SEGMENT_SIZE", 3)
         end
 
         before(:each) do
@@ -172,7 +172,7 @@ describe Raca::Bucket do
         end
 
         it "should call upload_io" do
-          cloud_bucket.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
         end
       end
 
@@ -188,7 +188,7 @@ describe Raca::Bucket do
         end
 
         it "should make the correct HTTP calls" do
-          cloud_bucket.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
         end
       end
 
@@ -203,7 +203,7 @@ describe Raca::Bucket do
 
         it "should raise a descriptive execption" do
           lambda {
-            cloud_bucket.upload('key', data_or_path)
+            cloud_container.upload('key', data_or_path)
           }.should raise_error(RuntimeError)
         end
       end
@@ -212,7 +212,7 @@ describe Raca::Bucket do
         let(:data_or_path) { 4 }
 
         it 'should raise an argument error' do
-          lambda { cloud_bucket.upload('key', data_or_path) }.should raise_error(ArgumentError)
+          lambda { cloud_container.upload('key', data_or_path) }.should raise_error(ArgumentError)
         end
       end
     end
@@ -230,7 +230,7 @@ describe Raca::Bucket do
 
       it 'should log the fact that it deleted the key' do
         logger.should_receive(:debug).with('deleting key from /account/test')
-        cloud_bucket.delete('key')
+        cloud_container.delete('key')
       end
     end
 
@@ -248,7 +248,7 @@ describe Raca::Bucket do
 
       it 'should log the fact that it deleted the key' do
         logger.should_receive(:debug).with('Requesting /account/test/key to be purged from the CDN')
-        cloud_bucket.purge_from_akamai('key', 'services@theconversation.edu.au')
+        cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au')
       end
     end
 
@@ -264,17 +264,17 @@ describe Raca::Bucket do
             }
           ).to_return(:status => 200, :body => @body, :headers => {})
 
-          @filepath = File.join(File.dirname(__FILE__), '../tmp', 'cloud_bucket_test_file')
+          @filepath = File.join(File.dirname(__FILE__), '../tmp', 'cloud_container_test_file')
           FileUtils.mkdir_p File.dirname @filepath
         end
 
         it 'should log the fact that it is about to download key' do
           logger.should_receive(:debug).with('downloading key from /account/test')
-          cloud_bucket.download('key', @filepath)
+          cloud_container.download('key', @filepath)
         end
 
         it 'should write the response body to disk' do
-          cloud_bucket.download('key', @filepath)
+          cloud_container.download('key', @filepath)
           File.open(@filepath, 'r') { |file| file.readline.should eql(@body) }
         end
 
@@ -296,7 +296,7 @@ describe Raca::Bucket do
 
         it 'should log the fact that it is about to download key' do
           logger.should_receive(:debug).with('downloading key from /account/test')
-          lambda { cloud_bucket.download('key', @filepath) }.should raise_error
+          lambda { cloud_container.download('key', @filepath) }.should raise_error
         end
       end
     end
@@ -321,16 +321,16 @@ describe Raca::Bucket do
 
         it 'should log what it intends to do' do
           logger.should_receive(:debug).with("retrieving up to 1 of #{max} items from /account/test")
-          cloud_bucket.list(max: max)
+          cloud_container.list(max: max)
         end
 
         it 'should be an array of length requested' do
-          cloud_bucket.list(max: max).length.should eql(max)
+          cloud_container.list(max: max).length.should eql(max)
         end
 
         it 'should log what it has done when complete' do
           logger.should_receive(:debug).with("Got 1 items; we don't need any more.")
-          cloud_bucket.list(max: max)
+          cloud_container.list(max: max)
         end
       end
 
@@ -353,16 +353,16 @@ describe Raca::Bucket do
 
         it 'should log what it intends to do' do
           logger.should_receive(:debug).with("retrieving up to 10000 of 100000 items from /account/test")
-          cloud_bucket.list(max: max)
+          cloud_container.list(max: max)
         end
 
         it 'should be an array of length found by cloud_request' do
-          cloud_bucket.list(max: max).length.should eql(1)
+          cloud_container.list(max: max).length.should eql(1)
         end
 
         it 'should log what it has done when complete' do
           logger.should_receive(:debug).with("Got 1 items; there can't be any more.")
-          cloud_bucket.list(max: max)
+          cloud_container.list(max: max)
         end
       end
 
@@ -396,16 +396,16 @@ describe Raca::Bucket do
 
         it 'should log what it intends to do' do
           logger.should_receive(:debug).with("retrieving up to 10000 of 10001 items from /account/test")
-          cloud_bucket.list(max: max)
+          cloud_container.list(max: max)
         end
 
         it 'should be an array of length found by cloud_request' do
-          cloud_bucket.list(max: max).length.should eql(10001)
+          cloud_container.list(max: max).length.should eql(10001)
         end
 
         it 'should log what it has done when complete' do
           logger.should_receive(:debug).with("Got 10000 items; requesting 1 more.")
-          cloud_bucket.list(max: max)
+          cloud_container.list(max: max)
         end
       end
 
@@ -423,16 +423,16 @@ describe Raca::Bucket do
 
         it 'should log what it intends to do' do
           logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /account/test")
-          cloud_bucket.list(max: max, prefix: prefix)
+          cloud_container.list(max: max, prefix: prefix)
         end
 
         it 'should be an array of length found by cloud_request' do
-          cloud_bucket.list(max: max, prefix: prefix).length.should eql(1)
+          cloud_container.list(max: max, prefix: prefix).length.should eql(1)
         end
 
         it 'should log what it has done when complete' do
           logger.should_receive(:debug).with("Got 1 items; we don't need any more.")
-          cloud_bucket.list(max: max, prefix: prefix)
+          cloud_container.list(max: max, prefix: prefix)
         end
       end
     end
@@ -450,12 +450,12 @@ describe Raca::Bucket do
         end
 
         it 'should log what it indends to do' do
-          logger.should_receive(:debug).with("retrieving bucket listing from /account/test items starting with #{search_term}")
-          cloud_bucket.search(search_term)
+          logger.should_receive(:debug).with("retrieving container listing from /account/test items starting with #{search_term}")
+          cloud_container.search(search_term)
         end
 
         it 'should return an array of search results' do
-          cloud_bucket.search(search_term).length.should eql(3)
+          cloud_container.search(search_term).length.should eql(3)
         end
       end
 
@@ -469,12 +469,12 @@ describe Raca::Bucket do
         end
 
         it 'should log what it indends to do' do
-          logger.should_receive(:debug).with("retrieving bucket listing from /account/test items starting with #{search_term}")
-          cloud_bucket.search(search_term)
+          logger.should_receive(:debug).with("retrieving container listing from /account/test items starting with #{search_term}")
+          cloud_container.search(search_term)
         end
 
         it 'should return an empty array of search results' do
-          cloud_bucket.search(search_term).should eql([])
+          cloud_container.search(search_term).should eql([])
         end
       end
     end
@@ -498,12 +498,12 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving bucket metadata from /account/test')
-        cloud_bucket.metadata
+        logger.should_receieve(:debug).with('retrieving container metadata from /account/test')
+        cloud_container.metadata
       end
 
       it 'should return a hash containing the number of objects and the total bytes used' do
-        cloud_bucket.metadata.should eql({:objects => 5, :bytes => 1200})
+        cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
       end
     end
 
@@ -530,17 +530,17 @@ describe Raca::Bucket do
       end
 
       it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving bucket CDN metadata from /account/test')
-        cloud_bucket.cdn_metadata
+        logger.should_receieve(:debug).with('retrieving container CDN metadata from /account/test')
+        cloud_container.cdn_metadata
       end
 
       it 'should return a hash containing the number of objects and the total bytes used' do
-        cloud_bucket.cdn_metadata[:cdn_enabled].should    == true
-        cloud_bucket.cdn_metadata[:host].should           == "http://example.com"
-        cloud_bucket.cdn_metadata[:ssl_host].should       == "https://example.com"
-        cloud_bucket.cdn_metadata[:streaming_host].should == "http://streaming.example.com"
-        cloud_bucket.cdn_metadata[:ttl].should            == 1234
-        cloud_bucket.cdn_metadata[:log_retention].should  == false
+        cloud_container.cdn_metadata[:cdn_enabled].should    == true
+        cloud_container.cdn_metadata[:host].should           == "http://example.com"
+        cloud_container.cdn_metadata[:ssl_host].should       == "https://example.com"
+        cloud_container.cdn_metadata[:streaming_host].should == "http://streaming.example.com"
+        cloud_container.cdn_metadata[:ttl].should            == 1234
+        cloud_container.cdn_metadata[:log_retention].should  == false
       end
     end
     describe '#containers_metadata' do
@@ -564,11 +564,11 @@ describe Raca::Bucket do
 
       it 'should log what it indends to do' do
         logger.should_receieve(:debug).with('retrieving containers metadata from /account/test')
-        cloud_bucket.containers_metadata
+        cloud_container.containers_metadata
       end
 
       it 'should return a hash of results' do
-        cloud_bucket.containers_metadata.should == {
+        cloud_container.containers_metadata.should == {
           containers: 5,
           objects: 10,
           bytes: 1024,
@@ -590,7 +590,7 @@ describe Raca::Bucket do
 
       it 'should log what it indends to do' do
         logger.should_receieve(:debug).with('enabling CDN access to /account/test with a cache expiry of 1000 minutes')
-        cloud_bucket.cdn_enable(60000)
+        cloud_container.cdn_enable(60000)
       end
     end
     describe '#set_temp_url_key' do
@@ -607,12 +607,12 @@ describe Raca::Bucket do
 
       it 'should log what it indends to do' do
         logger.should_receieve(:debug).with('setting Account Temp URL Key on /account/test')
-        cloud_bucket.set_temp_url_key("secret")
+        cloud_container.set_temp_url_key("secret")
       end
     end
     describe '#expiring_url' do
       it 'should returned a signed URL' do
-        url = cloud_bucket.expiring_url("foo.txt", "secret", 1234567890)
+        url = cloud_container.expiring_url("foo.txt", "secret", 1234567890)
         url.should == "https://the-cloud.com/account/test/foo.txt?temp_url_sig=596355666ef72a9da6b03de32e9dd4ac003ee9be&temp_url_expires=1234567890"
       end
     end

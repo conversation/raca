@@ -7,23 +7,23 @@ module Raca
   # Handy abstraction for interacting with a single Cloud Files container. We
   # could use fog or similar, but this ~200 line class is simple and does
   # everything we need.
-  class Bucket
+  class Container
     MAX_ITEMS_PER_LIST = 10_000
     LARGE_FILE_THRESHOLD = 5_368_709_120 # 5 Gb
     LARGE_FILE_SEGMENT_SIZE = 104_857_600 # 100 Mb
 
-    attr_reader :bucket_name
+    attr_reader :container_name
 
-    def initialize(account, region, bucket_name, opts = {})
-      raise ArgumentError, "The bucket name must not contain '/'." if bucket_name['/']
-      @account, @region, @bucket_name = account, region, bucket_name
+    def initialize(account, region, container_name, opts = {})
+      raise ArgumentError, "The container name must not contain '/'." if container_name['/']
+      @account, @region, @container_name = account, region, container_name
       @storage_url = @account.public_endpoint("cloudFiles", region)
       @cdn_url     = @account.public_endpoint("cloudFilesCDN", region)
       @logger = opts[:logger]
       @logger ||= Rails.logger if defined?(Rails)
     end
 
-    # Upload data_or_path (which may be a filename or an IO) to the bucket, as key.
+    # Upload data_or_path (which may be a filename or an IO) to the container, as key.
     def upload(key, data_or_path)
       case data_or_path
       when StringIO, File
@@ -40,8 +40,8 @@ module Raca
     # Delete +key+ from the container. If the container is on the CDN, the object will
     # still be served from the CDN until the TTL expires.
     def delete(key)
-      log "deleting #{key} from #{bucket_path}"
-      storage_request(Net::HTTP::Delete.new(File.join(bucket_path, key)))
+      log "deleting #{key} from #{container_path}"
+      storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
     end
 
     # Remove +key+ from the CDN edge nodes on which it is currently cached. The object is
@@ -51,16 +51,16 @@ module Raca
     # This shouldn't be used except when it's really required (e.g. when a piece has to be
     # taken down) because it's expensive: it lodges a support ticket at Akamai. (!)
     def purge_from_akamai(key, email_address)
-      log "Requesting #{File.join(bucket_path, key)} to be purged from the CDN"
+      log "Requesting #{File.join(container_path, key)} to be purged from the CDN"
       cdn_request(Net::HTTP::Delete.new(
-        File.join(bucket_path, key),
+        File.join(container_path, key),
         'X-Purge-Email' => email_address
       ))
     end
 
     def download(key, filepath)
-      log "downloading #{key} from #{bucket_path}"
-      storage_request(Net::HTTP::Get.new(File.join(bucket_path, key))) do |response|
+      log "downloading #{key} from #{container_path}"
+      storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
         File.open(filepath, 'wb') do |io|
           response.read_body do |chunk|
             io.write(chunk)
@@ -69,7 +69,7 @@ module Raca
       end
     end
 
-    # Return an array of files in the bucket.
+    # Return an array of files in the container.
     #
     # Supported options
     #
@@ -81,11 +81,11 @@ module Raca
       marker = options.fetch(:marker, nil)
       prefix = options.fetch(:prefix, nil)
       limit = [max, MAX_ITEMS_PER_LIST].min
-      log "retrieving up to #{limit} of #{max} items from #{bucket_path}"
+      log "retrieving up to #{limit} of #{max} items from #{container_path}"
       query_string = "limit=#{limit}"
       query_string += "&marker=#{marker}" if marker
       query_string += "&prefix=#{prefix}" if prefix
-      request = Net::HTTP::Get.new(bucket_path + "?#{query_string}")
+      request = Net::HTTP::Get.new(container_path + "?#{query_string}")
       result = storage_request(request).body || ""
       result.split("\n").tap {|items|
         if max <= limit
@@ -100,13 +100,13 @@ module Raca
     end
 
     def search(prefix)
-      log "retrieving bucket listing from #{bucket_path} items starting with #{prefix}"
+      log "retrieving container listing from #{container_path} items starting with #{prefix}"
       list(prefix: prefix)
     end
 
     def metadata
-      log "retrieving bucket metadata from #{bucket_path}"
-      response = storage_request(Net::HTTP::Head.new(bucket_path))
+      log "retrieving container metadata from #{container_path}"
+      response = storage_request(Net::HTTP::Head.new(container_path))
       {
         :objects => response["X-Container-Object-Count"].to_i,
         :bytes => response["X-Container-Bytes-Used"].to_i
@@ -114,8 +114,8 @@ module Raca
     end
 
     def cdn_metadata
-      log "retrieving bucket CDN metadata from #{bucket_path}"
-      response = cdn_request(Net::HTTP::Head.new(bucket_path))
+      log "retrieving container CDN metadata from #{container_path}"
+      response = cdn_request(Net::HTTP::Head.new(container_path))
       {
         :cdn_enabled => response["X-CDN-Enabled"] == "True",
         :host => response["X-CDN-URI"],
@@ -136,14 +136,14 @@ module Raca
       }
     end
 
-    # use this with caution, it will make EVERY object in the bucket publicly available
+    # use this with caution, it will make EVERY object in the container publicly available
     # via the CDN. CDN enabling can be done via the web UI but only with a TTL of 72 hours.
     # Using the API it's possible to set a TTL of 50 years.
     #
     def cdn_enable(ttl = 72.hours.to_i)
-      log "enabling CDN access to #{bucket_path} with a cache expiry of #{ttl / 60} minutes"
+      log "enabling CDN access to #{container_path} with a cache expiry of #{ttl / 60} minutes"
 
-      cdn_request Net::HTTP::Put.new(bucket_path, "X-TTL" => ttl.to_i.to_s)
+      cdn_request Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s)
     end
 
     # Set the secret key that will be used to generate expiring URLs for all cloud files containers on the current account. This value should be passed to the expiring_url() method.
@@ -164,7 +164,7 @@ module Raca
 
       method  = 'GET'
       expires = expires_at.to_i
-      path    = File.join(bucket_path, object_key)
+      path    = File.join(container_path, object_key)
       data    = "#{method}\n#{expires}\n#{path}"
 
       hmac    = OpenSSL::HMAC.new(temp_url_key, digest)
@@ -184,7 +184,7 @@ module Raca
     end
 
     def upload_io_standard(key, io, byte_count)
-      full_path = File.join(bucket_path, key)
+      full_path = File.join(container_path, key)
 
       headers = {}
       headers['Content-Type']     = extension_content_type(full_path)
@@ -215,7 +215,7 @@ module Raca
         io.seek(start_pos)
         segment_io = StringIO.new(io.read(LARGE_FILE_SEGMENT_SIZE))
         result = upload_io_standard(segment_key, segment_io, segment_io.size)
-        segments << {path: "#{@bucket_name}/#{segment_key}", etag: result["ETag"], size_bytes: segment_io.size}
+        segments << {path: "#{@container_name}/#{segment_key}", etag: result["ETag"], size_bytes: segment_io.size}
       end
       manifest_key = "#{key}?multipart-manifest=put"
       manifest_body = StringIO.new(JSON.dump(segments))
@@ -287,8 +287,8 @@ module Raca
       URI.parse(@cdn_url).path
     end
 
-    def bucket_path
-      @bucket_path ||= File.join(storage_path, bucket_name)
+    def container_path
+      @container_path ||= File.join(storage_path, container_name)
     end
 
     def file_content_type(path)

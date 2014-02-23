@@ -5,7 +5,7 @@ module Raca
     end
 
     def get(container_name)
-      Raca::Bucket.new(@account, @region, container_name)
+      Raca::Container.new(@account, @region, container_name)
     end
   end
 end
