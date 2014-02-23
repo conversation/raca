@@ -25,8 +25,8 @@ a taste of the basics.
 
     account = Raca::Account.new("username", "api_key")
     puts account.auth_token
-    puts account.public_endpoint("cloudFiles", "ORD")
-    puts account.service_endpoint("cloudFiles", "ORD")
+    puts account.public_endpoint("cloudFiles", :ord)
+    puts account.service_endpoint("cloudFiles", :ord)
 
 ### Cloud Files
 
