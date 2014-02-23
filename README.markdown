@@ -61,18 +61,14 @@ You can retrieve a single container from the collection:
 
     dir = ord_containers.get("container_name")
 
-And retrieve some metadata on the collection:
+Retrieve some metadata on the collection:
 
-    put ord_containers.meta_data
+    put ord_containers.metadata
 
 With a single container, you can perform a range of operations on the container
 and objects inside it.
 
     dir = ord_containers.get("container_name")
-
-List objects:
-
-    puts dir.list
 
 Download a file:
 
@@ -99,9 +95,9 @@ View metadata on the container:
 
 Enable access to the container contents via a public CDN. Use this with caution, it will make *all* objects public!
 
-It accepts an argument telling the CDN edge nodes how long they can cache each object for.
+It accepts an argument telling the CDN edge nodes how long they can cache each object for (in seconds).
 
-    dir.cdn_enable(1.day)
+    dir.cdn_enable(60 * 60 * 24) # 1 day
 
 Purge an object from the CDN:
 
@@ -110,6 +106,9 @@ Purge an object from the CDN:
 Generate a public URL to an object in a private container. The second argument
 is the temp URL key that can be set using Raca::Containers#set_temp_url_key
 
+    ord_containers = account.containers(:ord)
+    ord_containers.set_temp_url_key("secret")
+    dir = ord_containers.get("container_name")
     puts dir.expiring_url("remote_key.txt", "secret", Time.now.to_i + 60)
 
 ### Cloud Servers
