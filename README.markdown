@@ -29,7 +29,7 @@ required, you can specify a region using a symbol with the 3-letter region code.
 Currently, the following regions are valid:
 
 * :ord - Chicago
-* :iad - Washington
+* :iad - Northern Virginia
 * :syd - Sydney
 * :dfw - Dallas-Fort Worth
 * :hkg - Hong Kong
