@@ -1,0 +1,8 @@
+* region argument to Account#public_endpoint should be optional. Raise
+  an error if the requested service requires a region. Choose the global endpoiint if the to requested service has no regions.
+
+* Same for Account#servicenet_endpoint
+
+* reduce duplication in http request code
+
+* reduce duplication in logging
