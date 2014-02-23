@@ -36,6 +36,10 @@ module Raca
       Raca::Containers.new(self, region)
     end
 
+    def servers(region)
+      Raca::Servers.new(self, region)
+    end
+
     def refresh_cache
       Net::HTTP.new('identity.api.rackspacecloud.com', 443).tap {|http|
         http.use_ssl = true

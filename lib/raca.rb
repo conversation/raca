@@ -1,4 +1,5 @@
 require 'raca/account'
 require 'raca/bucket'
 require 'raca/containers'
+require 'raca/servers'
 require 'raca/server'
