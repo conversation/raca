@@ -119,5 +119,5 @@ is the temp URL key that can be set using Raca::Containers#set_temp_url_key
 
 ## Compatibility
 
-The Raca version number is 0.0.x because it's highly unstable. Until we release
+The Raca version number is < 1.0 because it's highly unstable. Until we release
 a 1.0.0, consider the API of this gem to be unstable.
