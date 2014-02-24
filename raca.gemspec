@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name              = "raca"
-  s.version           = "0.1.0"
+  s.version           = "0.1.1"
   s.summary           = "A simple wrapper for the Rackspace Cloud API with no dependencies"
   s.description       = "A simple wrapper for the Rackspace Cloud API with no dependencies"
   s.authors           = ["James Healy"]
