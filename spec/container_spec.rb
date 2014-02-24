@@ -252,6 +252,31 @@ describe Raca::Container do
       end
     end
 
+    describe '#object_metadata' do
+      before(:each) do
+        stub_request(:head, "https://the-cloud.com/account/test/key").with(
+          :headers => {
+            'X-Auth-Token'=>'token'
+          }
+        ).to_return(
+          :status => 200,
+          :headers => {'Content-Length' => '12345', 'Content-Type' => 'text/plain'}
+        )
+      end
+
+      it 'should log the fact that it is about to download key' do
+        logger.should_receive(:debug).with('Requesting metadata from /account/test/key')
+        cloud_container.object_metadata('key')
+      end
+
+      it 'should return appropriate metadata as a hash' do
+        cloud_container.object_metadata('key').should == {
+          bytes: 12345,
+          content_type: 'text/plain'
+        }
+      end
+    end
+
     describe '#download' do
       context 'successfully calling cloud_request' do
         before(:each) do

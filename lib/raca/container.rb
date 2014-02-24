@@ -58,6 +58,19 @@ module Raca
       ))
     end
 
+    # Returns some metadata about a single object in this container.
+    #
+    def object_metadata(key)
+      object_path = File.join(container_path, key)
+      log "Requesting metadata from #{object_path}"
+
+      response = storage_request(Net::HTTP::Head.new(object_path))
+      {
+        :content_type => response["Content-Type"],
+        :bytes => response["Content-Length"].to_i
+      }
+    end
+
     def download(key, filepath)
       log "downloading #{key} from #{container_path}"
       storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
