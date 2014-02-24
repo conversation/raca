@@ -117,6 +117,17 @@ is the temp URL key that can be set using Raca::Containers#set_temp_url_key
     server = account.servers(:ord).get("foo")
     puts server.public_addresses
 
+## Why not fog?
+
+[fog](http://rubygems.org/gems/fog) is the [official](http://developer.rackspace.com)
+ruby library for interacting with the Rackspace API. It is a very capable
+library and supports much more of the API than this modest gem.
+
+As of version 1.20.0, fog supports dozens of providers, contains ~152000 lines
+of ruby and adds ~500ms to the boot time of our rails apps. raca is a
+lightweight alternative with minimal dependencies that should have a negligable
+impact on application boot times.
+
 ## Compatibility
 
 The Raca version number is < 1.0 because it's highly unstable. Until we release
