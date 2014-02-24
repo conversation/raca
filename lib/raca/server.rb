@@ -10,8 +10,10 @@ module Raca
 
     attr_reader :server_name, :server_id
 
-    def initialize(account, server_name)
+    def initialize(account, region, server_name)
       @account = account
+      @region = region
+      @servers_url = @account.public_endpoint("cloudServersOpenStack", region)
       @server_name = server_name
       @server_id = find_server_id(server_name)
     end
@@ -114,19 +116,27 @@ module Raca
     end
 
     def flavors_path
-      @flavors_path ||= File.join(@account.ngserver_path, "flavors")
+      @flavors_path ||= File.join(account_path, "flavors")
     end
 
     def images_path
-      @images_path ||= File.join(@account.ngserver_path, "images")
+      @images_path ||= File.join(account_path, "images")
     end
 
     def server_path
-      @server_path ||= File.join(@account.ngserver_path, "servers", @server_id.to_s)
+      @server_path ||= File.join(account_path, "servers", @server_id.to_s)
     end
 
     def servers_path
-      @servers_path ||= File.join(@account.ngserver_path, "servers")
+      @servers_path ||= File.join(account_path, "servers")
+    end
+
+    def servers_host
+      @servers_host ||= URI.parse(@servers_url).host
+    end
+
+    def account_path
+      @account_path ||= URI.parse(@servers_url).path
     end
 
     def flavors
@@ -177,7 +187,7 @@ module Raca
       request['X-Auth-Token'] = @account.auth_token
       request['Content-Type'] = 'application/json'
       request['Accept']       = 'application/json'
-      cloud_http(@account.ngserver_host) do |http|
+      cloud_http(servers_host) do |http|
         http.request(request, body)
       end
     end

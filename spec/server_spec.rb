@@ -4,15 +4,14 @@ require 'webmock/rspec'
 describe Raca::Server do
   let!(:account) {
     info = double(Raca::Account)
-    info.stub(:ngserver_host).and_return("the_cloud.com")
-    info.stub(:ngserver_path).and_return("/server_path")
+      info.stub(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
     info.stub(:auth_token).and_return('token')
     info.stub(:refresh_cache).and_return(true)
     info
   }
 
   before(:each) do
-    stub_request(:get, "https://the_cloud.com/server_path/servers").with(
+    stub_request(:get, "https://the-cloud.com/account/servers").with(
       :headers => {
         'Accept'=>'application/json',
         'Content-Type'=>'application/json',
@@ -20,7 +19,7 @@ describe Raca::Server do
       }
     ).to_return(:status => 200, :body => '{"servers":[{"id":123,"name":"server1"}]}')
 
-    stub_request(:get, "https://the_cloud.com/server_path/flavors").with(
+    stub_request(:get, "https://the-cloud.com/account/flavors").with(
       :headers => {
         'Accept'=>'application/json',
         'Content-Type'=>'application/json',
@@ -31,7 +30,7 @@ describe Raca::Server do
       :body => JSON.dump({flavors: [{id:1,name:"256 server"},{id:2,name:"512 server"}]})
     )
 
-    stub_request(:get, "https://the_cloud.com/server_path/images").with(
+    stub_request(:get, "https://the-cloud.com/account/images").with(
       :headers => {
         'Accept'=>'application/json',
         'Content-Type'=>'application/json',
@@ -44,7 +43,7 @@ describe Raca::Server do
       )
     )
 
-    stub_request(:post, "https://the_cloud.com/server_path/servers").with(
+    stub_request(:post, "https://the-cloud.com/account/servers").with(
       :headers => {
         'Accept'=>'application/json',
         'Content-Type'=>'application/json',
@@ -71,7 +70,7 @@ describe Raca::Server do
       )
     )
 
-    stub_request(:get, "https://the_cloud.com/server_path/servers/123").with(
+    stub_request(:get, "https://the-cloud.com/account/servers/123").with(
       :headers => {
         'Accept'=>'application/json',
         'Content-Type'=>'application/json',
@@ -97,7 +96,7 @@ describe Raca::Server do
       )
     )
 
-    stub_request(:delete, "https://the_cloud.com/server_path/servers/123").with(
+    stub_request(:delete, "https://the-cloud.com/account/servers/123").with(
       :headers => {
         'Accept'=>'application/json',
         'Content-Type'=>'application/json',
@@ -110,7 +109,7 @@ describe Raca::Server do
 
     context "with an existing server" do
       let!(:server) {
-        Raca::Server.new(account, "server1")
+        Raca::Server.new(account, :ord, "server1")
       }
       it 'should set the server_name atttribute' do
         server.server_name.should == 'server1'
@@ -123,7 +122,7 @@ describe Raca::Server do
 
     context "with an new server" do
       let!(:server) {
-        Raca::Server.new(account, "server2")
+        Raca::Server.new(account, :ord, "server2")
       }
       it 'should set the server_name atttribute' do
         server.server_name.should == 'server2'
@@ -139,7 +138,7 @@ describe Raca::Server do
   describe '#exists?' do
     context "with an existing server" do
       let!(:server) {
-        Raca::Server.new(account, "server1")
+        Raca::Server.new(account, :ord, "server1")
       }
 
       it 'should return true' do
@@ -149,7 +148,7 @@ describe Raca::Server do
 
     context "with an new server" do
       let!(:server) {
-        Raca::Server.new(account, "server2")
+        Raca::Server.new(account, :ord, "server2")
       }
 
       it 'should return false' do
@@ -161,7 +160,7 @@ describe Raca::Server do
   describe '#create' do
 
     context "with an existing server" do
-      let!(:server) { Raca::Server.new(account, "server1") }
+      let!(:server) { Raca::Server.new(account, :ord, "server1") }
 
       it 'should return raise an exception' do
         lambda {
@@ -171,7 +170,7 @@ describe Raca::Server do
     end
 
     context "with an new server" do
-      let!(:server) { Raca::Server.new(account, "server2") }
+      let!(:server) { Raca::Server.new(account, :ord, "server2") }
 
       it 'should raise an exception when passed an invalid flavour' do
         lambda {
@@ -200,7 +199,7 @@ describe Raca::Server do
   describe '#details' do
 
     context "with an existing server" do
-      let!(:server) { Raca::Server.new(account, "server1") }
+      let!(:server) { Raca::Server.new(account, :ord, "server1") }
 
       it 'should return a hash of interesting data' do
         server.details.should be_a(Hash)
@@ -209,7 +208,7 @@ describe Raca::Server do
     end
 
     context "with a new server" do
-      let!(:server) { Raca::Server.new(account, "server2") }
+      let!(:server) { Raca::Server.new(account, :ord, "server2") }
 
       it 'should raise an exception' do
         lambda {
@@ -223,7 +222,7 @@ describe Raca::Server do
   describe '#delete!' do
 
     context "with an existing server" do
-      let!(:server) { Raca::Server.new(account, "server1") }
+      let!(:server) { Raca::Server.new(account, :ord, "server1") }
 
       it 'should return true' do
         server.delete!.should be_true
@@ -231,7 +230,7 @@ describe Raca::Server do
     end
 
     context "with a new server" do
-      let!(:server) { Raca::Server.new(account, "server2") }
+      let!(:server) { Raca::Server.new(account, :ord, "server2") }
 
       it 'should raise an exception' do
         lambda {
