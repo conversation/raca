@@ -18,5 +18,5 @@ Cane::RakeTask.new(:cane) do |cane|
   cane.style_measure = 110
 
   # 0 is the goal
-  cane.max_violations = 20
+  cane.max_violations = 18
 end

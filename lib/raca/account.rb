@@ -3,12 +3,9 @@ require 'json'
 
 module Raca
 
-  # The rackspace auth API accepts a username and API key and returns a range
-  # of settings that are used for interacting with their other APIS. Think
-  # auth tokens, hostnames, paths, etc.
-  #
-  # This class caches these settings so we don't have to continually use our
-  # username/key to retrieve them.
+  # This is your entrypoint to the rackspace API. Start by creating a
+  # Raca::Account object and then use the instance method to access each of
+  # the supported rackspace APIs.
   #
   class Account
 

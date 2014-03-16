@@ -1,4 +1,12 @@
 module Raca
+  # Represents a collection of cloud files containers within a single region.
+  #
+  # There's a handful of methods that relate to the entire collection, but this
+  # is primarily used to retrieve a single Raca::Container object.
+  #
+  # You probably don't want to instantiate this directly,
+  # see Raca::Account#containers
+  #
   class Containers
     def initialize(account, region, opts = {})
       @account, @region = account, region

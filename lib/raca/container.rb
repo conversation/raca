@@ -4,9 +4,13 @@ require 'openssl'
 require 'uri'
 
 module Raca
-  # Handy abstraction for interacting with a single Cloud Files container. We
-  # could use fog or similar, but this ~200 line class is simple and does
-  # everything we need.
+
+  # Represents a single cloud files container. Contains methods for uploading,
+  # downloading, collecting stats, listing files, etc.
+  #
+  # You probably don't want to instantiate this directly,
+  # see Raca::Account#containers
+  #
   class Container
     MAX_ITEMS_PER_LIST = 10_000
     LARGE_FILE_THRESHOLD = 5_368_709_120 # 5 Gb

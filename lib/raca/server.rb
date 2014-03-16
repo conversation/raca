@@ -3,9 +3,12 @@ require 'base64'
 require 'net/http'
 
 module Raca
-  # Handy abstraction for interacting with a single rackspace Clpud Server. We
-  # could use fog or similar, but this ~200 line class is simple and does
-  # everything we need.
+  # Represents a single cloud server. Contains methods for deleting a server,
+  # listing IP addresses, checking the state, etc.
+  #
+  # You probably don't want to instantiate this directly,
+  # see Raca::Account#servers
+  #
   class Server
 
     attr_reader :server_name, :server_id
