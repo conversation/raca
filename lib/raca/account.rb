@@ -21,10 +21,25 @@ module Raca
       end
     end
 
+    # Return the temporary token that should be used when making further API
+    # requests.
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.auth_token
+    #
     def auth_token
       extract_value(identity_data, "access", "token", "id")
     end
 
+    # Return the public API URL for a particular rackspace service.
+    #
+    # Use Account#service_names to see a list of valid service_name's for this.
+    #
+    # Check the project README for an updated list of the available regions.
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.public_endpoint("cloudServers", :syd)
+    #
     def public_endpoint(service_name, region)
       region = region.to_s.upcase
       endpoints = service_endpoints(service_name)
@@ -38,6 +53,9 @@ module Raca
     # Any name returned from here can be passe to #public_endpoint to get the API
     # endpoint for that service
     #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.service_names
+    #
     def service_names
       catalog = extract_value(identity_data, "access", "serviceCatalog") || {}
       catalog.map { |service|
@@ -45,14 +63,29 @@ module Raca
       }
     end
 
+    # Return a Raca::Containers object for a region. Use this to interact with the
+    # cloud files service.
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.containers(:ord)
+    #
     def containers(region)
       Raca::Containers.new(self, region)
     end
 
+    # Return a Raca::Containers object for a region. Use this to interact with the
+    # next gen cloud servers service.
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.servers(:ord)
+    #
     def servers(region)
       Raca::Servers.new(self, region)
     end
 
+    # Raca classes use this method to occasionally re-authenticate with the rackspace
+    # servers. You can probable ignore it.
+    #
     def refresh_cache
       Net::HTTP.new('identity.api.rackspacecloud.com', 443).tap {|http|
         http.use_ssl = true
