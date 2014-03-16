@@ -163,7 +163,9 @@ describe Raca::Container do
             }
           ).to_return(:status => 200, :body => "", :headers => {ETag: "3" })
           stub_request(:put, "https://the-cloud.com/account/test/key?multipart-manifest=put").with(
-            :body => %Q{[{"path":"test/key.000","etag":"1","size_bytes":3},{"path":"test/key.001","etag":"2","size_bytes":3},{"path":"test/key.002","etag":"3","size_bytes":1}]},
+            :body => %Q{[{"path":"test/key.000","etag":"1","size_bytes":3},
+                         {"path":"test/key.001","etag":"2","size_bytes":3},
+                         {"path":"test/key.002","etag":"3","size_bytes":1}]}.gsub(/\s+/m,""),
             :headers => {
               'Content-Length'=>'151',
               'X-Auth-Token'=>'token'

@@ -15,8 +15,8 @@ Cane::RakeTask.new(:cane) do |cane|
   cane.abc_max = 15
 
   # keep line lengths to something that fit into a reasonable split terminal
-  cane.style_measure = 110
+  cane.style_measure = 148
 
   # 0 is the goal
-  cane.max_violations = 18
+  cane.max_violations = 3
 end

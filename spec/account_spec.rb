@@ -48,7 +48,8 @@ describe Raca::Account do
           .to_return(:status => 200, :body => api_response)
       end
       it "should request the value from rackspace" do
-        info.public_endpoint("cloudFiles", "ORD").should == "https://storage101.ord1.clouddrive.com/v1/MossoCloudFS_3788b1b9-4be1-4fae-9bea-fe5c532dbe47"
+        uri = "https://storage101.ord1.clouddrive.com/v1/MossoCloudFS_3788b1b9-4be1-4fae-9bea-fe5c532dbe47"
+        info.public_endpoint("cloudFiles", "ORD").should == uri
       end
     end
   end

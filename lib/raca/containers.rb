@@ -31,9 +31,12 @@ module Raca
       }
     end
 
-    # Set the secret key that will be used to generate expiring URLs for all cloud files containers on the current account. This value should be passed to the expiring_url() method.
+    # Set the secret key that will be used to generate expiring URLs for all cloud
+    # files containers on the current account. This value should be passed to the
+    # expiring_url() method.
     #
-    # Use this with caution, this will invalidate all previously generated expiring URLS *FOR THE ENTIRE ACCOUNT*
+    # Use this with caution, this will invalidate all previously generated expiring
+    # URLS *FOR THE ENTIRE ACCOUNT*
     #
     def set_temp_url_key(secret)
       log "setting Account Temp URL Key on #{storage_path}"
