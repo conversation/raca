@@ -22,7 +22,7 @@ module Raca
     end
 
     def auth_token
-      extract_value(cloudfiles_data, "access", "token", "id")
+      extract_value(identity_data, "access", "token", "id")
     end
 
     def public_endpoint(service_name, region)
@@ -39,7 +39,7 @@ module Raca
     # endpoint for that service
     #
     def service_names
-      catalog = extract_value(cloudfiles_data, "access", "serviceCatalog") || {}
+      catalog = extract_value(identity_data, "access", "serviceCatalog") || {}
       catalog.map { |service|
         service["name"]
       }
@@ -107,7 +107,7 @@ module Raca
     # cloud servers, dns, etc)
     #
     def service_endpoints(service_name)
-      catalog = extract_value(cloudfiles_data, "access", "serviceCatalog") || {}
+      catalog = extract_value(identity_data, "access", "serviceCatalog") || {}
       service = catalog.detect { |s| s["name"] == service_name } || {}
       service["endpoints"] || []
     end
@@ -128,7 +128,7 @@ module Raca
       end
     end
 
-    def cloudfiles_data
+    def identity_data
       refresh_cache unless cache_read(cache_key)
 
       cache_read(cache_key) || {}
