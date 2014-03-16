@@ -52,4 +52,18 @@ describe Raca::Account do
       end
     end
   end
+  describe '#service_names' do
+    context "when the identity response is pre-cached" do
+      let!(:cache) { {"raca-theuser" => JSON.load(File.read(File.expand_path("../fixtures/identity_response.json", __FILE__))) } }
+      let!(:info) { Raca::Account.new(username, api_key, cache)}
+
+      it "should return the cached value" do
+        info.service_names.should =~ %w{
+          cloudFilesCDN cloudFiles cloudServersOpenStack cloudBlockStorage
+          cloudDatabases cloudDNS cloudLoadBalancers cloudMonitoring
+          cloudQueues autoscale cloudBackup cloudServers
+        }
+      end
+    end
+  end
 end

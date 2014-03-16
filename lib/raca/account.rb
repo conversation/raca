@@ -32,6 +32,19 @@ module Raca
       regional_endpoint["publicURL"]
     end
 
+    # Return the names of the available services. As rackspace add new services and
+    # APIs they should appear here.
+    #
+    # Any name returned from here can be passe to #public_endpoint to get the API
+    # endpoint for that service
+    #
+    def service_names
+      catalog = extract_value(cloudfiles_data, "access", "serviceCatalog") || {}
+      catalog.map { |service|
+        service["name"]
+      }
+    end
+
     def containers(region)
       Raca::Containers.new(self, region)
     end

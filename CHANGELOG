@@ -1,3 +1,6 @@
+v0.2.0 (XXX)
+* Added Raca::Account#service_names
+
 v0.1.1 (25th February 2014)
 * Add Raca::Container#object_metadata
 
