@@ -190,8 +190,8 @@ module Raca
       if io.respond_to?(:path)
         headers['Content-Type'] ||= extension_content_type(io.path)
         headers['Content-Type'] ||= file_content_type(io.path)
-        headers['Etag']           = md5(io.path)
       end
+        headers['Etag']           = md5_io(io)
       headers['Content-Type']   ||= "application/octet-stream"
       if content_type_needs_cors(key)
         headers['Access-Control-Allow-Origin'] = "*"
@@ -314,14 +314,14 @@ module Raca
       [".eot",".ttf",".woff"].include?(File.extname(path))
     end
 
-    def md5(path)
+    def md5_io(io)
+      io.seek(0)
       digest = Digest::MD5.new
-      File.open(path, 'rb') do |f|
-        # read in 128K chunks
-        f.each(1024 * 128) do |chunk|
-          digest << chunk
-        end
+      # read in 128K chunks
+      io.each(1024 * 128) do |chunk|
+        digest << chunk
       end
+      io.seek(0)
       digest.hexdigest
     end
   end
