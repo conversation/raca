@@ -256,6 +256,10 @@ describe Raca::Container do
         logger.should_receive(:debug).with('Requesting /account/test/key to be purged from the CDN')
         cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au')
       end
+
+      it 'should return true' do
+        result = cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au').should == true
+      end
     end
 
     describe '#object_metadata' do

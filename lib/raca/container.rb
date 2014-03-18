@@ -57,10 +57,11 @@ module Raca
     # taken down) because it's expensive: it lodges a support ticket at Akamai. (!)
     def purge_from_akamai(key, email_address)
       log "Requesting #{File.join(container_path, key)} to be purged from the CDN"
-      cdn_request(Net::HTTP::Delete.new(
+      response = cdn_request(Net::HTTP::Delete.new(
         File.join(container_path, key),
         'X-Purge-Email' => email_address
       ))
+      (200..299).cover?(response.code.to_i)
     end
 
     # Returns some metadata about a single object in this container.
