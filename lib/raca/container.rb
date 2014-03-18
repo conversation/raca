@@ -171,7 +171,8 @@ module Raca
     def cdn_enable(ttl = 72.hours.to_i)
       log "enabling CDN access to #{container_path} with a cache expiry of #{ttl / 60} minutes"
 
-      cdn_request Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s)
+      response = cdn_request(Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s))
+      (200..299).cover?(response.code.to_i)
     end
 
     # Generate a expiring URL for a file that is otherwise private. useful for providing temporary

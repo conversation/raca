@@ -599,6 +599,10 @@ describe Raca::Container do
         logger.should_receieve(:debug).with('enabling CDN access to /account/test with a cache expiry of 1000 minutes')
         cloud_container.cdn_enable(60000)
       end
+
+      it 'should return true' do
+        cloud_container.cdn_enable(60000).should == true
+      end
     end
     describe '#expiring_url' do
       it 'should returned a signed URL' do
