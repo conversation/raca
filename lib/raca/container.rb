@@ -147,7 +147,9 @@ module Raca
     # via the CDN. CDN enabling can be done via the web UI but only with a TTL of 72 hours.
     # Using the API it's possible to set a TTL of 50 years.
     #
-    def cdn_enable(ttl = 72.hours.to_i)
+    # TTL is defined in seconds, default is 72 hours.
+    #
+    def cdn_enable(ttl = 259200)
       log "enabling CDN access to #{container_path} with a cache expiry of #{ttl / 60} minutes"
 
       cdn_request Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s)
