@@ -100,13 +100,26 @@ module Raca
           JSON.dump(payload),
           {'Content-Type' => 'application/json'},
         )
-        if response.is_a? Net::HTTPSuccess
+        if response.is_a?(Net::HTTPSuccess)
           cache_write(cache_key, JSON.load(response.body))
+        else
+          raise_on_error(response)
         end
       }
     end
 
     private
+
+    def raise_on_error(response)
+      error_klass = case response.code.to_i
+      when 400 then BadRequestError
+      when 404 then NotFoundError
+      when 500 then ServerError
+      else
+        HTTPError
+      end
+      raise error_klass, "Rackspace returned HTTP status #{response.code}"
+    end
 
     # This method is opaque, but it was the best I could come up with using just
     # the standard library. Sorry.

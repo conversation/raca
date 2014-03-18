@@ -280,9 +280,23 @@ module Raca
           @account.refresh_cache
           response = block.call http
         end
-        raise "Failure: Rackspace returned #{response.inspect}" unless response.is_a?(Net::HTTPSuccess)
-        response
+        if response.is_a?(Net::HTTPSuccess)
+          response
+        else
+          raise_on_error(response)
+        end
       end
+    end
+
+    def raise_on_error(response)
+      error_klass = case response.code.to_i
+      when 400 then BadRequestError
+      when 404 then NotFoundError
+      when 500 then ServerError
+      else
+        HTTPError
+      end
+      raise error_klass, "Rackspace returned HTTP status #{response.code}"
     end
 
     def log(msg)
