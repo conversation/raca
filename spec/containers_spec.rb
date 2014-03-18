@@ -68,6 +68,10 @@ describe Raca::Containers do
       logger.should_receieve(:debug).with('setting Account Temp URL Key on /account/test')
       containers.set_temp_url_key("secret")
     end
+
+    it 'should return true' do
+      containers.set_temp_url_key("secret").should == true
+    end
   end
 
 end

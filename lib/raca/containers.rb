@@ -41,7 +41,9 @@ module Raca
     def set_temp_url_key(secret)
       log "setting Account Temp URL Key on #{storage_path}"
 
-      storage_request Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
+      request = Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
+      response = storage_request(request)
+      (200..299).cover?(response.code.to_i)
     end
 
     private
