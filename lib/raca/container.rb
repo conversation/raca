@@ -45,7 +45,8 @@ module Raca
     # still be served from the CDN until the TTL expires.
     def delete(key)
       log "deleting #{key} from #{container_path}"
-      storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
+      response = storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
+      (200..299).cover?(response.code.to_i)
     end
 
     # Remove +key+ from the CDN edge nodes on which it is currently cached. The object is

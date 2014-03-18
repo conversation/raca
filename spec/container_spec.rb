@@ -234,6 +234,10 @@ describe Raca::Container do
         logger.should_receive(:debug).with('deleting key from /account/test')
         cloud_container.delete('key')
       end
+
+      it 'should return true' do
+        result = cloud_container.delete('key').should == true
+      end
     end
 
     describe '#purge_from_akamai' do
