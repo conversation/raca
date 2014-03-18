@@ -77,15 +77,20 @@ module Raca
       }
     end
 
+    # Download the object at key into a local file at filepath.
+    #
+    # Returns the number of downloaded bytes.
+    #
     def download(key, filepath)
       log "downloading #{key} from #{container_path}"
-      storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
+      response = storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
         File.open(filepath, 'wb') do |io|
           response.read_body do |chunk|
             io.write(chunk)
           end
         end
       end
+      response["Content-Length"].to_i
     end
 
     # Return an array of files in the container.

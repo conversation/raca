@@ -297,7 +297,7 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => @body, :headers => {})
+          ).to_return(:status => 200, :body => @body, :headers => {"Content-Length" => @body.bytesize})
 
           @filepath = File.join(File.dirname(__FILE__), '../tmp', 'cloud_container_test_file')
           FileUtils.mkdir_p File.dirname @filepath
@@ -311,6 +311,10 @@ describe Raca::Container do
         it 'should write the response body to disk' do
           cloud_container.download('key', @filepath)
           File.open(@filepath, 'r') { |file| file.readline.should eql(@body) }
+        end
+
+        it 'should return the number of bytes downloaded' do
+          cloud_container.download('key', @filepath).should == 33
         end
 
         after(:each) do
