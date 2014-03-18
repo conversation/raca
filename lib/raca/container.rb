@@ -28,6 +28,7 @@ module Raca
     end
 
     # Upload data_or_path (which may be a filename or an IO) to the container, as key.
+    #
     def upload(key, data_or_path)
       case data_or_path
       when StringIO, File
@@ -43,6 +44,7 @@ module Raca
 
     # Delete +key+ from the container. If the container is on the CDN, the object will
     # still be served from the CDN until the TTL expires.
+    #
     def delete(key)
       log "deleting #{key} from #{container_path}"
       response = storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
@@ -55,6 +57,7 @@ module Raca
     #
     # This shouldn't be used except when it's really required (e.g. when a piece has to be
     # taken down) because it's expensive: it lodges a support ticket at Akamai. (!)
+    #
     def purge_from_akamai(key, email_address)
       log "Requesting #{File.join(container_path, key)} to be purged from the CDN"
       response = cdn_request(Net::HTTP::Delete.new(
@@ -100,6 +103,7 @@ module Raca
     # max - the maximum number of items to return
     # marker - return items alphabetically after this key. Useful for pagination
     # prefix - only return items that start with this string
+    #
     def list(options = {})
       max = options.fetch(:max, MAX_ITEMS_PER_LIST)
       marker = options.fetch(:marker, nil)
