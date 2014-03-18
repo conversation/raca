@@ -85,11 +85,11 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
+          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
         end
 
-        it "should call upload_io" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == 'foo'
         end
       end
 
@@ -104,12 +104,12 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
+          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
         end
 
-        it "should call upload_io" do
+        it "should return the ETag header returned from rackspace" do
           File.open(File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt'), 'r') do |data_or_path|
-            cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+            cloud_container.upload('key', data_or_path).should == 'foo'
           end
         end
       end
@@ -127,11 +127,11 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
+          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
         end
 
-        it "should call upload_io" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == 'foo'
         end
       end
 
@@ -170,11 +170,11 @@ describe Raca::Container do
               'Content-Length'=>'151',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
-        end
+          ).to_return(:status => 200, :body => "", :headers => {"ETag" => "1234"})
+        end#
 
-        it "should call upload_io" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == "1234"
         end
       end
 
@@ -185,12 +185,12 @@ describe Raca::Container do
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
-            :status => 200, :body => "", :headers => {}
+            :status => 200, :body => "", :headers => {"ETag" => "foo"}
           )
         end
 
-        it "should make the correct HTTP calls" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == 'foo'
         end
       end
 

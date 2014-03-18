@@ -221,7 +221,8 @@ module Raca
       request = Net::HTTP::Put.new(full_path, headers)
       request.body_stream = io
       request.content_length = byte_count
-      storage_request(request)
+      response = storage_request(request)
+      response['ETag']
     end
 
     def upload_io_large(key, io, byte_count)
@@ -232,8 +233,8 @@ module Raca
         segment_key = "%s.%03d" % [key, segments.size]
         io.seek(start_pos)
         segment_io = StringIO.new(io.read(LARGE_FILE_SEGMENT_SIZE))
-        result = upload_io_standard(segment_key, segment_io, segment_io.size)
-        segments << {path: "#{@container_name}/#{segment_key}", etag: result["ETag"], size_bytes: segment_io.size}
+        etag = upload_io_standard(segment_key, segment_io, segment_io.size)
+        segments << {path: "#{@container_name}/#{segment_key}", etag: etag, size_bytes: segment_io.size}
       end
       manifest_key = "#{key}?multipart-manifest=put"
       manifest_body = StringIO.new(JSON.dump(segments))
