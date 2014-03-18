@@ -123,11 +123,18 @@ module Raca
       }
     end
 
+    # Returns an array of object keys that start with prefix. This is a convenience
+    # method that is equivilant to:
+    #
+    #     container.list(prefix: "foo/bar/")
+    #
     def search(prefix)
       log "retrieving container listing from #{container_path} items starting with #{prefix}"
       list(prefix: prefix)
     end
 
+    # Return some basic stats on the current container.
+    #
     def metadata
       log "retrieving container metadata from #{container_path}"
       response = storage_request(Net::HTTP::Head.new(container_path))
@@ -137,6 +144,9 @@ module Raca
       }
     end
 
+    # Return the key details for CDN access to this container. Can be called
+    # on non CDN enabled containers, but the details won't make much sense.
+    #
     def cdn_metadata
       log "retrieving container CDN metadata from #{container_path}"
       response = cdn_request(Net::HTTP::Head.new(container_path))
