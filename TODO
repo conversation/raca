@@ -7,7 +7,4 @@
 
 * reduce duplication in logging
 
-* create custom exceptions for HTTP issues: 400, 404, 500, everything else. We
-  currently raise a RuntimeError and that's useless to our users. Should reference
-  the underlying issue (maybe the full response object) in case the caller needs
-  to debug
+* Consider adding more response details to our HTTPError classes. Status code, etc
