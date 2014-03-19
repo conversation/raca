@@ -205,13 +205,30 @@ module Raca
           @account.refresh_cache
           response = block.call http
         end
-        raise "Failure: Rackspace returned #{response.inspect}" unless response.is_a?(Net::HTTPSuccess)
+        if response.is_a?(Net::HTTPSuccess)
+          response
+        else
+          raise_on_error(response)
+        end
         response
       end
-    rescue Timeout::Error => e
-      raise e if retries <= 0
+    rescue Timeout::Error
+      if retries <= 0
+        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
+      end
 
       cloud_http(hostname, retries - 1, &block)
+    end
+
+    def raise_on_error(response)
+      error_klass = case response.code.to_i
+      when 400 then BadRequestError
+      when 404 then NotFoundError
+      when 500 then ServerError
+      else
+        HTTPError
+      end
+      raise error_klass, "Rackspace returned HTTP status #{response.code}"
     end
 
     def log(msg)

@@ -28,6 +28,7 @@ module Raca
     end
 
     # Upload data_or_path (which may be a filename or an IO) to the container, as key.
+    #
     def upload(key, data_or_path)
       case data_or_path
       when StringIO, File
@@ -43,9 +44,11 @@ module Raca
 
     # Delete +key+ from the container. If the container is on the CDN, the object will
     # still be served from the CDN until the TTL expires.
+    #
     def delete(key)
       log "deleting #{key} from #{container_path}"
-      storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
+      response = storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
+      (200..299).cover?(response.code.to_i)
     end
 
     # Remove +key+ from the CDN edge nodes on which it is currently cached. The object is
@@ -54,12 +57,14 @@ module Raca
     #
     # This shouldn't be used except when it's really required (e.g. when a piece has to be
     # taken down) because it's expensive: it lodges a support ticket at Akamai. (!)
+    #
     def purge_from_akamai(key, email_address)
       log "Requesting #{File.join(container_path, key)} to be purged from the CDN"
-      cdn_request(Net::HTTP::Delete.new(
+      response = cdn_request(Net::HTTP::Delete.new(
         File.join(container_path, key),
         'X-Purge-Email' => email_address
       ))
+      (200..299).cover?(response.code.to_i)
     end
 
     # Returns some metadata about a single object in this container.
@@ -75,15 +80,20 @@ module Raca
       }
     end
 
+    # Download the object at key into a local file at filepath.
+    #
+    # Returns the number of downloaded bytes.
+    #
     def download(key, filepath)
       log "downloading #{key} from #{container_path}"
-      storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
+      response = storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
         File.open(filepath, 'wb') do |io|
           response.read_body do |chunk|
             io.write(chunk)
           end
         end
       end
+      response["Content-Length"].to_i
     end
 
     # Return an array of files in the container.
@@ -93,6 +103,7 @@ module Raca
     # max - the maximum number of items to return
     # marker - return items alphabetically after this key. Useful for pagination
     # prefix - only return items that start with this string
+    #
     def list(options = {})
       max = options.fetch(:max, MAX_ITEMS_PER_LIST)
       marker = options.fetch(:marker, nil)
@@ -116,11 +127,18 @@ module Raca
       }
     end
 
+    # Returns an array of object keys that start with prefix. This is a convenience
+    # method that is equivilant to:
+    #
+    #     container.list(prefix: "foo/bar/")
+    #
     def search(prefix)
       log "retrieving container listing from #{container_path} items starting with #{prefix}"
       list(prefix: prefix)
     end
 
+    # Return some basic stats on the current container.
+    #
     def metadata
       log "retrieving container metadata from #{container_path}"
       response = storage_request(Net::HTTP::Head.new(container_path))
@@ -130,6 +148,9 @@ module Raca
       }
     end
 
+    # Return the key details for CDN access to this container. Can be called
+    # on non CDN enabled containers, but the details won't make much sense.
+    #
     def cdn_metadata
       log "retrieving container CDN metadata from #{container_path}"
       response = cdn_request(Net::HTTP::Head.new(container_path))
@@ -152,7 +173,8 @@ module Raca
     def cdn_enable(ttl = 259200)
       log "enabling CDN access to #{container_path} with a cache expiry of #{ttl / 60} minutes"
 
-      cdn_request Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s)
+      response = cdn_request(Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s))
+      (200..299).cover?(response.code.to_i)
     end
 
     # Generate a expiring URL for a file that is otherwise private. useful for providing temporary
@@ -202,7 +224,8 @@ module Raca
       request = Net::HTTP::Put.new(full_path, headers)
       request.body_stream = io
       request.content_length = byte_count
-      storage_request(request)
+      response = storage_request(request)
+      response['ETag']
     end
 
     def upload_io_large(key, io, byte_count)
@@ -213,8 +236,8 @@ module Raca
         segment_key = "%s.%03d" % [key, segments.size]
         io.seek(start_pos)
         segment_io = StringIO.new(io.read(LARGE_FILE_SEGMENT_SIZE))
-        result = upload_io_standard(segment_key, segment_io, segment_io.size)
-        segments << {path: "#{@container_name}/#{segment_key}", etag: result["ETag"], size_bytes: segment_io.size}
+        etag = upload_io_standard(segment_key, segment_io, segment_io.size)
+        segments << {path: "#{@container_name}/#{segment_key}", etag: etag, size_bytes: segment_io.size}
       end
       manifest_key = "#{key}?multipart-manifest=put"
       manifest_body = StringIO.new(JSON.dump(segments))
@@ -236,7 +259,7 @@ module Raca
       end
     rescue Timeout::Error
       if retries >= 3
-        raise "Timeout from Rackspace at #{Time.now} while trying #{request.class} to #{request.path}"
+        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
       end
 
       unless defined?(Rails) && Rails.env.test?
@@ -259,9 +282,23 @@ module Raca
           @account.refresh_cache
           response = block.call http
         end
-        raise "Failure: Rackspace returned #{response.inspect}" unless response.is_a?(Net::HTTPSuccess)
-        response
+        if response.is_a?(Net::HTTPSuccess)
+          response
+        else
+          raise_on_error(response)
+        end
       end
+    end
+
+    def raise_on_error(response)
+      error_klass = case response.code.to_i
+      when 400 then BadRequestError
+      when 404 then NotFoundError
+      when 500 then ServerError
+      else
+        HTTPError
+      end
+      raise error_klass, "Rackspace returned HTTP status #{response.code}"
     end
 
     def log(msg)

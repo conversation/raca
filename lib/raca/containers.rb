@@ -41,7 +41,9 @@ module Raca
     def set_temp_url_key(secret)
       log "setting Account Temp URL Key on #{storage_path}"
 
-      storage_request Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
+      request = Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
+      response = storage_request(request)
+      (200..299).cover?(response.code.to_i)
     end
 
     private
@@ -76,9 +78,24 @@ module Raca
           @account.refresh_cache
           response = block.call http
         end
-        raise "Failure: Rackspace returned #{response.inspect}" unless response.is_a?(Net::HTTPSuccess)
+        if response.is_a?(Net::HTTPSuccess)
+          response
+        else
+          raise_on_error(response)
+        end
         response
       end
+    end
+
+    def raise_on_error(response)
+      error_klass = case response.code.to_i
+      when 400 then BadRequestError
+      when 404 then NotFoundError
+      when 500 then ServerError
+      else
+        HTTPError
+      end
+      raise error_klass, "Rackspace returned HTTP status #{response.code}"
     end
 
     def log(msg)

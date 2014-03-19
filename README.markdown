@@ -117,6 +117,18 @@ is the temp URL key that can be set using Raca::Containers#set_temp_url_key
     server = account.servers(:ord).get("foo")
     puts server.public_addresses
 
+## General API principles
+
+Methods that make calls to an API should never return a raw HTTP response
+object. If a sensible return value is expected (retrieving metadata, listing
+matches, etc) then that should always be returned. If return value isn't obvious
+(change remote state, deleting an object, etc) then a simple boolean or similar
+should be returned to indicate success.
+
+If an unexpected error occurs (a network timeout, a 500, etc) then an exception
+should be raised.
+
+
 ## Why not fog?
 
 [fog](http://rubygems.org/gems/fog) is the [official](http://developer.rackspace.com)

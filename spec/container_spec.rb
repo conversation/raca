@@ -85,11 +85,11 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
+          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
         end
 
-        it "should call upload_io" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == 'foo'
         end
       end
 
@@ -104,12 +104,12 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
+          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
         end
 
-        it "should call upload_io" do
+        it "should return the ETag header returned from rackspace" do
           File.open(File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt'), 'r') do |data_or_path|
-            cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+            cloud_container.upload('key', data_or_path).should == 'foo'
           end
         end
       end
@@ -127,11 +127,11 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
+          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
         end
 
-        it "should call upload_io" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == 'foo'
         end
       end
 
@@ -170,11 +170,11 @@ describe Raca::Container do
               'Content-Length'=>'151',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => "", :headers => {})
-        end
+          ).to_return(:status => 200, :body => "", :headers => {"ETag" => "1234"})
+        end#
 
-        it "should call upload_io" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == "1234"
         end
       end
 
@@ -185,12 +185,12 @@ describe Raca::Container do
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
-            :status => 200, :body => "", :headers => {}
+            :status => 200, :body => "", :headers => {"ETag" => "foo"}
           )
         end
 
-        it "should make the correct HTTP calls" do
-          cloud_container.upload('key', data_or_path).is_a?(Net::HTTPSuccess).should be_true
+        it "should return the ETag header returned from rackspace" do
+          cloud_container.upload('key', data_or_path).should == 'foo'
         end
       end
 
@@ -206,7 +206,7 @@ describe Raca::Container do
         it "should raise a descriptive execption" do
           lambda {
             cloud_container.upload('key', data_or_path)
-          }.should raise_error(RuntimeError)
+          }.should raise_error(Raca::TimeoutError)
         end
       end
 
@@ -234,6 +234,10 @@ describe Raca::Container do
         logger.should_receive(:debug).with('deleting key from /account/test')
         cloud_container.delete('key')
       end
+
+      it 'should return true' do
+        result = cloud_container.delete('key').should == true
+      end
     end
 
     describe '#purge_from_akamai' do
@@ -251,6 +255,10 @@ describe Raca::Container do
       it 'should log the fact that it deleted the key' do
         logger.should_receive(:debug).with('Requesting /account/test/key to be purged from the CDN')
         cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au')
+      end
+
+      it 'should return true' do
+        result = cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au').should == true
       end
     end
 
@@ -289,7 +297,7 @@ describe Raca::Container do
               'User-Agent'=>'Ruby',
               'X-Auth-Token'=>'token'
             }
-          ).to_return(:status => 200, :body => @body, :headers => {})
+          ).to_return(:status => 200, :body => @body, :headers => {"Content-Length" => @body.bytesize})
 
           @filepath = File.join(File.dirname(__FILE__), '../tmp', 'cloud_container_test_file')
           FileUtils.mkdir_p File.dirname @filepath
@@ -303,6 +311,10 @@ describe Raca::Container do
         it 'should write the response body to disk' do
           cloud_container.download('key', @filepath)
           File.open(@filepath, 'r') { |file| file.readline.should eql(@body) }
+        end
+
+        it 'should return the number of bytes downloaded' do
+          cloud_container.download('key', @filepath).should == 33
         end
 
         after(:each) do
@@ -586,6 +598,10 @@ describe Raca::Container do
       it 'should log what it indends to do' do
         logger.should_receieve(:debug).with('enabling CDN access to /account/test with a cache expiry of 1000 minutes')
         cloud_container.cdn_enable(60000)
+      end
+
+      it 'should return true' do
+        cloud_container.cdn_enable(60000).should == true
       end
     end
     describe '#expiring_url' do

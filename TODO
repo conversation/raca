@@ -6,3 +6,5 @@
 * reduce duplication in http request code
 
 * reduce duplication in logging
+
+* Consider adding more response details to our HTTPError classes. Status code, etc
