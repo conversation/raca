@@ -3,7 +3,7 @@
 
 * Same for Account#servicenet_endpoint
 
-* reduce duplication in http request code
+* reduce epic duplication in http request code
 
 * reduce duplication in logging
 
