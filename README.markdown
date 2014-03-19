@@ -113,9 +113,22 @@ is the temp URL key that can be set using Raca::Containers#set_temp_url_key
 
 ### Cloud Servers
 
-    account = Raca::Account.new("username", "api_key")
-    server = account.servers(:ord).get("foo")
-    puts server.public_addresses
+Using an existing Raca::Account object, retrieve a collection of Cloud Servers
+from a region like so:
+
+    ord_servers = account.servers(:ord)
+
+You can retrieve a existing server from the collection:
+
+    a_server = ord_servers.get("server_name")
+
+Retrieve some details on the server:
+
+    put a_server.metadata
+
+You can use the collection to create a brand new server:
+
+    a_server = ord_servers.create("server_name", "1Gb", "Ubuntu 10.04 LTS")
 
 ## General API principles
 
