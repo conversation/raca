@@ -15,6 +15,7 @@ module Raca
     MAX_ITEMS_PER_LIST = 10_000
     LARGE_FILE_THRESHOLD = 5_368_709_120 # 5 Gb
     LARGE_FILE_SEGMENT_SIZE = 104_857_600 # 100 Mb
+    RETRY_PAUSE = 5
 
     attr_reader :container_name
 
@@ -262,11 +263,9 @@ module Raca
         raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
       end
 
-      unless defined?(Rails) && Rails.env.test?
-        retry_interval = 5 + (retries.to_i * 5) # Retry after 5, 10, 15 and 20 seconds
-        log "Rackspace timed out: retrying after #{retry_interval}s"
-        sleep(retry_interval)
-      end
+      retry_interval = RETRY_PAUSE + (retries.to_i * RETRY_PAUSE) # Retry after 5, 10, 15 and 20 seconds
+      log "Rackspace timed out: retrying after #{retry_interval}s"
+      sleep(retry_interval)
 
       cloud_request(request, hostname, retries + 1, &block)
     end

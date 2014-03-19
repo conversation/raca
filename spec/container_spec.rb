@@ -182,6 +182,8 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
+          stub_const("Raca::Container::RETRY_PAUSE", 0)
+
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
@@ -198,6 +200,8 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
+          stub_const("Raca::Container::RETRY_PAUSE", 0)
+
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error, Timeout::Error, Timeout::Error)
