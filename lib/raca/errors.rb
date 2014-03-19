@@ -11,4 +11,7 @@ module Raca
   # for 500 responses from rackspace
   class ServerError < HTTPError; end
 
+  # for rackspace timeouts
+  class TimeoutError < RuntimeError; end
+
 end

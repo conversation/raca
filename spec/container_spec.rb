@@ -206,7 +206,7 @@ describe Raca::Container do
         it "should raise a descriptive execption" do
           lambda {
             cloud_container.upload('key', data_or_path)
-          }.should raise_error(RuntimeError)
+          }.should raise_error(Raca::TimeoutError)
         end
       end
 

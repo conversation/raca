@@ -212,8 +212,10 @@ module Raca
         end
         response
       end
-    rescue Timeout::Error => e
-      raise e if retries <= 0
+    rescue Timeout::Error
+      if retries <= 0
+        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
+      end
 
       cloud_http(hostname, retries - 1, &block)
     end

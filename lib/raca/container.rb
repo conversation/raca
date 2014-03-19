@@ -257,7 +257,7 @@ module Raca
       end
     rescue Timeout::Error
       if retries >= 3
-        raise "Timeout from Rackspace at #{Time.now} while trying #{request.class} to #{request.path}"
+        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
       end
 
       unless defined?(Rails) && Rails.env.test?
