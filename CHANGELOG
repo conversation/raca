@@ -1,5 +1,8 @@
-v0.2.0 (XXX)
+v0.2.0 (19th March 2014)
 * Added Raca::Account#service_names
+* Stop returning HTTP response objects from many methods on Raca::Container
+* Added some custom error classes for common issues (timeouts, 404s, etc) to
+  make recovering easier for the user
 
 v0.1.1 (25th February 2014)
 * Add Raca::Container#object_metadata
