@@ -4,7 +4,7 @@ require 'webmock/rspec'
 describe Raca::Server do
   let!(:account) {
     info = double(Raca::Account)
-      info.stub(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
+    info.stub(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
     info.stub(:auth_token).and_return('token')
     info.stub(:refresh_cache).and_return(true)
     info
