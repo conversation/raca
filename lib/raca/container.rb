@@ -216,7 +216,7 @@ module Raca
         headers['Content-Type'] ||= extension_content_type(io.path)
         headers['Content-Type'] ||= file_content_type(io.path)
       end
-        headers['Etag']           = md5_io(io)
+      headers['Etag']           = md5_io(io)
       headers['Content-Type']   ||= "application/octet-stream"
       if content_type_needs_cors(key)
         headers['Access-Control-Allow-Origin'] = "*"
