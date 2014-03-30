@@ -214,7 +214,6 @@ module Raca
       headers['Content-Type']   ||= extension_content_type(full_path)
       if io.respond_to?(:path)
         headers['Content-Type'] ||= extension_content_type(io.path)
-        headers['Content-Type'] ||= file_content_type(io.path)
       end
       headers['Etag']           = md5_io(io)
       headers['Content-Type']   ||= "application/octet-stream"
@@ -326,10 +325,6 @@ module Raca
 
     def container_path
       @container_path ||= File.join(storage_path, container_name)
-    end
-
-    def file_content_type(path)
-      `file -b --mime-type \"#{path.gsub('"', '\"')}\"`.chomp
     end
 
     def extension_content_type(path)
