@@ -107,26 +107,30 @@ module Raca
     # max - the maximum number of items to return
     # marker - return items alphabetically after this key. Useful for pagination
     # prefix - only return items that start with this string
+    # details - return extra details for each file - size, md5, etc
     #
     def list(options = {})
       max = options.fetch(:max, MAX_ITEMS_PER_LIST)
       marker = options.fetch(:marker, nil)
       prefix = options.fetch(:prefix, nil)
+      details = options.fetch(:details, nil)
       limit = [max, MAX_ITEMS_PER_LIST].min
       log "retrieving up to #{limit} of #{max} items from #{container_path}"
-      query_string = "limit=#{limit}"
-      query_string += "&marker=#{marker}" if marker
-      query_string += "&prefix=#{prefix}" if prefix
-      request = Net::HTTP::Get.new(container_path + "?#{query_string}")
+      request = Net::HTTP::Get.new(list_request_path(marker, prefix, details, limit))
       result = storage_request(request).body || ""
-      result.split("\n").tap {|items|
+      if details
+        result = JSON.parse(result)
+      else
+        result = result.split("\n")
+      end
+      result.tap {|items|
         if max <= limit
           log "Got #{items.length} items; we don't need any more."
         elsif items.length < limit
           log "Got #{items.length} items; there can't be any more."
         else
           log "Got #{items.length} items; requesting #{max - limit} more."
-          items.concat list(max: max - limit, marker: items.last, prefix: prefix)
+          items.concat list(max: max - limit, marker: items.last, prefix: prefix, details: details)
         end
       }
     end
@@ -199,6 +203,17 @@ module Raca
     end
 
     private
+
+    # build the request path for listing the contents of a container
+    #
+    def list_request_path(marker, prefix, details, limit)
+      query_string = "limit=#{limit}"
+      query_string += "&marker=#{marker}" if marker
+      query_string += "&prefix=#{prefix}" if prefix
+      query_string += "&format=json"      if details
+      container_path + "?#{query_string}"
+    end
+
 
     def upload_io(key, io, byte_count, headers = {})
       if byte_count <= LARGE_FILE_THRESHOLD

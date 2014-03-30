@@ -1,5 +1,6 @@
 v0.3.0 (30th March 2014)
 * Added an optional headers param to Raca::Container#upload
+* Added the details option to Raca::Container#list
 
 v0.2.0 (19th March 2014)
 * Breaking API changes to Raca::Servers and Raca:Server

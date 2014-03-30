@@ -520,6 +520,47 @@ describe Raca::Container do
           cloud_container.list(max: max, prefix: prefix)
         end
       end
+      context 'when a detailed list is requested' do
+        let(:max) { 1 }
+        let(:prefix) { "assets/"}
+        let(:result) {
+          [{
+            "hash"=>"af580187547b398e9bca73f936643dc5",
+            "last_modified"=>"2013-08-06T05:01:17.769500",
+            "bytes"=>56,
+            "name"=>"csv/2.csv",
+            "content_type"=>"text/csv"
+          }]
+        }
+        let(:json) { JSON.dump(result) }
+
+        before(:each) do
+          stub_request(:get, "https://the-cloud.com/account/test?limit=1&format=json").with(
+            :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
+          ).to_return(
+            :status => 200, :body => json, :headers => {}
+          )
+        end
+
+        it 'should log what it intends to do' do
+          logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /account/test")
+          cloud_container.list(max: max, details: true)
+        end
+
+        it 'should be an array of length found by cloud_request' do
+          cloud_container.list(max: max, details: true).length.should eql(1)
+        end
+
+        it 'should be an array of hashes with appropriate data' do
+          detail = cloud_container.list(max: max, details: true).first
+          detail.should include("hash" => "af580187547b398e9bca73f936643dc5")
+        end
+
+        it 'should log what it has done when complete' do
+          logger.should_receive(:debug).with("Got 1 items; we don't need any more.")
+          cloud_container.list(max: max, details: true)
+        end
+      end
     end
 
     describe '#search' do
