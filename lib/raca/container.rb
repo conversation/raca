@@ -30,13 +30,16 @@ module Raca
 
     # Upload data_or_path (which may be a filename or an IO) to the container, as key.
     #
-    def upload(key, data_or_path)
+    # If headers are provided they will be added to to upload request. Use this to
+    # manually specify content type, content disposition, CORS headers, etc.
+    #
+    def upload(key, data_or_path, headers = {})
       case data_or_path
       when StringIO, File
-        upload_io(key, data_or_path, data_or_path.size)
+        upload_io(key, data_or_path, data_or_path.size, headers)
       when String
         File.open(data_or_path, "rb") do |io|
-          upload_io(key, io, io.stat.size)
+          upload_io(key, io, io.stat.size, headers)
         end
       else
         raise ArgumentError, "data_or_path must be an IO with data or filename string"
@@ -197,19 +200,18 @@ module Raca
 
     private
 
-    def upload_io(key, io, byte_count)
+    def upload_io(key, io, byte_count, headers = {})
       if byte_count <= LARGE_FILE_THRESHOLD
-        upload_io_standard(key, io, byte_count)
+        upload_io_standard(key, io, byte_count, headers)
       else
-        upload_io_large(key, io, byte_count)
+        upload_io_large(key, io, byte_count, headers)
       end
     end
 
-    def upload_io_standard(key, io, byte_count)
+    def upload_io_standard(key, io, byte_count, headers = {})
       full_path = File.join(container_path, key)
 
-      headers = {}
-      headers['Content-Type']     = extension_content_type(full_path)
+      headers['Content-Type']   ||= extension_content_type(full_path)
       if io.respond_to?(:path)
         headers['Content-Type'] ||= extension_content_type(io.path)
         headers['Content-Type'] ||= file_content_type(io.path)
@@ -229,7 +231,7 @@ module Raca
       response['ETag']
     end
 
-    def upload_io_large(key, io, byte_count)
+    def upload_io_large(key, io, byte_count, headers = {})
       segment_count = (byte_count.to_f / LARGE_FILE_SEGMENT_SIZE).ceil
       segments = []
       while segments.size < segment_count
@@ -237,7 +239,7 @@ module Raca
         segment_key = "%s.%03d" % [key, segments.size]
         io.seek(start_pos)
         segment_io = StringIO.new(io.read(LARGE_FILE_SEGMENT_SIZE))
-        etag = upload_io_standard(segment_key, segment_io, segment_io.size)
+        etag = upload_io_standard(segment_key, segment_io, segment_io.size, headers)
         segments << {path: "#{@container_name}/#{segment_key}", etag: etag, size_bytes: segment_io.size}
       end
       manifest_key = "#{key}?multipart-manifest=put"

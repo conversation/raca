@@ -73,23 +73,65 @@ describe Raca::Container do
 
     describe '#upload' do
       context 'with a StringIO object' do
-        let(:data_or_path) { StringIO.new('some string', 'r') }
+        context 'with no headers provided and no file extension' do
+          let(:data_or_path) { StringIO.new('some string', 'r') }
 
-        before(:each) do
-          stub_request(:put, "https://the-cloud.com/account/test/key").with(
-            :body => "some string",
-            :headers => {
-              'Accept'=>'*/*',
-              'Content-Length'=>'11',
-              'Content-Type'=>'application/octet-stream',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          before(:each) do
+            stub_request(:put, "https://the-cloud.com/account/test/key").with(
+              :body => "some string",
+              :headers => {
+                'Accept'=>'*/*',
+                'Content-Length'=>'11',
+                'Content-Type'=>'application/octet-stream',
+                'User-Agent'=>'Ruby',
+                'X-Auth-Token'=>'token'
+              }
+            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          end
+
+          it "should return the ETag header returned from rackspace" do
+            cloud_container.upload('key', data_or_path).should == 'foo'
+          end
         end
+        context 'with no headers provided and a file extension on the key' do
+          let(:data_or_path) { StringIO.new('some string', 'r') }
 
-        it "should return the ETag header returned from rackspace" do
-          cloud_container.upload('key', data_or_path).should == 'foo'
+          before(:each) do
+            stub_request(:put, "https://the-cloud.com/account/test/key.zip").with(
+              :body => "some string",
+              :headers => {
+                'Accept'=>'*/*',
+                'Content-Length'=>'11',
+                'Content-Type'=>'application/zip',
+                'User-Agent'=>'Ruby',
+                'X-Auth-Token'=>'token'
+              }
+            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          end
+
+          it "should return the ETag header returned from rackspace" do
+            cloud_container.upload('key.zip', data_or_path).should == 'foo'
+          end
+        end
+        context 'with a content-type header provided' do
+          let(:data_or_path) { StringIO.new('some string', 'r') }
+
+          before(:each) do
+            stub_request(:put, "https://the-cloud.com/account/test/key").with(
+              :body => "some string",
+              :headers => {
+                'Accept'=>'*/*',
+                'Content-Length'=>'11',
+                'Content-Type'=>'text/plain',
+                'User-Agent'=>'Ruby',
+                'X-Auth-Token'=>'token'
+              }
+            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          end
+
+          it "should return the ETag header returned from rackspace" do
+            cloud_container.upload('key', data_or_path, 'Content-Type' => 'text/plain').should == 'foo'
+          end
         end
       end
 
