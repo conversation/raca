@@ -51,7 +51,8 @@ module Raca
     #
     def delete(key)
       log "deleting #{key} from #{container_path}"
-      response = storage_request(Net::HTTP::Delete.new(File.join(container_path, key)))
+      object_path = File.join(container_path, Raca::Util.url_encode(key))
+      response = storage_request(Net::HTTP::Delete.new(object_path))
       (200..299).cover?(response.code.to_i)
     end
 
@@ -65,7 +66,7 @@ module Raca
     def purge_from_akamai(key, email_address)
       log "Requesting #{File.join(container_path, key)} to be purged from the CDN"
       response = cdn_request(Net::HTTP::Delete.new(
-        File.join(container_path, key),
+        File.join(container_path, Raca::Util.url_encode(key)),
         'X-Purge-Email' => email_address
       ))
       (200..299).cover?(response.code.to_i)
@@ -74,7 +75,7 @@ module Raca
     # Returns some metadata about a single object in this container.
     #
     def object_metadata(key)
-      object_path = File.join(container_path, key)
+      object_path = File.join(container_path, Raca::Util.url_encode(key))
       log "Requesting metadata from #{object_path}"
 
       response = storage_request(Net::HTTP::Head.new(object_path))
@@ -90,7 +91,8 @@ module Raca
     #
     def download(key, filepath)
       log "downloading #{key} from #{container_path}"
-      response = storage_request(Net::HTTP::Get.new(File.join(container_path, key))) do |response|
+      object_path = File.join(container_path, Raca::Util.url_encode(key))
+      response = storage_request(Net::HTTP::Get.new(object_path)) do |response|
         File.open(filepath, 'wb') do |io|
           response.read_body do |chunk|
             io.write(chunk)
@@ -194,12 +196,13 @@ module Raca
       method  = 'GET'
       expires = expires_at.to_i
       path    = File.join(container_path, object_key)
+      encoded_path = File.join(container_path, Raca::Util.url_encode(object_key))
       data    = "#{method}\n#{expires}\n#{path}"
 
       hmac    = OpenSSL::HMAC.new(temp_url_key, digest)
       hmac << data
 
-      "https://#{storage_host}#{path}?temp_url_sig=#{hmac.hexdigest}&temp_url_expires=#{expires}"
+      "https://#{storage_host}#{encoded_path}?temp_url_sig=#{hmac.hexdigest}&temp_url_expires=#{expires}"
     end
 
     private
