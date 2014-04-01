@@ -133,6 +133,26 @@ describe Raca::Container do
             cloud_container.upload('key', data_or_path, 'Content-Type' => 'text/plain').should == 'foo'
           end
         end
+        context 'with a space in the object path' do
+          let(:data_or_path) { StringIO.new('some string', 'r') }
+
+          before(:each) do
+            stub_request(:put, "https://the-cloud.com/account/test/chunky%20bacon.txt").with(
+              :body => "some string",
+              :headers => {
+                'Accept'=>'*/*',
+                'Content-Length'=>'11',
+                'Content-Type'=>'text/plain',
+                'User-Agent'=>'Ruby',
+                'X-Auth-Token'=>'token'
+              }
+            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          end
+
+          it "should return the ETag header returned from rackspace" do
+            cloud_container.upload('chunky bacon.txt', data_or_path).should == 'foo'
+          end
+        end
       end
 
       context 'with a File object' do
@@ -213,7 +233,7 @@ describe Raca::Container do
               'X-Auth-Token'=>'token'
             }
           ).to_return(:status => 200, :body => "", :headers => {"ETag" => "1234"})
-        end#
+        end
 
         it "should return the ETag header returned from rackspace" do
           cloud_container.upload('key', data_or_path).should == "1234"
@@ -606,30 +626,61 @@ describe Raca::Container do
     end
 
     describe '#metadata' do
-      before(:each) do
-        stub_request(:head, "https://the-cloud.com/account/test").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(
-          :status => 200,
-          :body => "",
-          :headers => {
-            'X-Container-Object-Count' => 5,
-            'X-Container-Bytes-Used' => 1200
-          }
-        )
-      end
+      context "with a simple container name" do
+        before(:each) do
+          stub_request(:head, "https://the-cloud.com/account/test").with(
+            :headers => {
+              'Accept'=>'*/*',
+              'User-Agent'=>'Ruby',
+              'X-Auth-Token'=>'token'
+            }
+          ).to_return(
+            :status => 200,
+            :body => "",
+            :headers => {
+              'X-Container-Object-Count' => 5,
+              'X-Container-Bytes-Used' => 1200
+            }
+          )
+        end
 
-      it 'should log what it indends to do' do
-        logger.should_receieve(:debug).with('retrieving container metadata from /account/test')
-        cloud_container.metadata
-      end
+        it 'should log what it indends to do' do
+          logger.should_receieve(:debug).with('retrieving container metadata from /account/test')
+          cloud_container.metadata
+        end
 
-      it 'should return a hash containing the number of objects and the total bytes used' do
-        cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
+        it 'should return a hash containing the number of objects and the total bytes used' do
+          cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
+        end
+      end
+      context "with a container name containing spaces" do
+        let!(:cloud_container) { Raca::Container.new(account, :ord, 'foo bar') }
+
+        before(:each) do
+          stub_request(:head, "https://the-cloud.com/account/foo%20bar").with(
+            :headers => {
+              'Accept'=>'*/*',
+              'User-Agent'=>'Ruby',
+              'X-Auth-Token'=>'token'
+            }
+          ).to_return(
+            :status => 200,
+            :body => "",
+            :headers => {
+              'X-Container-Object-Count' => 5,
+              'X-Container-Bytes-Used' => 1200
+            }
+          )
+        end
+
+        it 'should log what it indends to do' do
+          logger.should_receieve(:debug).with('retrieving container metadata from /account/foo bar')
+          cloud_container.metadata
+        end
+
+        it 'should return a hash containing the number of objects and the total bytes used' do
+          cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
+        end
       end
     end
 

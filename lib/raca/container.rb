@@ -224,7 +224,7 @@ module Raca
     end
 
     def upload_io_standard(key, io, byte_count, headers = {})
-      full_path = File.join(container_path, key)
+      full_path = File.join(container_path, Raca::Util.url_encode(key))
 
       headers['Content-Type']   ||= extension_content_type(full_path)
       if io.respond_to?(:path)
@@ -237,12 +237,7 @@ module Raca
       end
 
       log "uploading #{byte_count} bytes to #{full_path}"
-
-      request = Net::HTTP::Put.new(full_path, headers)
-      request.body_stream = io
-      request.content_length = byte_count
-      response = storage_request(request)
-      response['ETag']
+      put_upload(full_path, headers, byte_count, io)
     end
 
     def upload_io_large(key, io, byte_count, headers = {})
@@ -256,9 +251,17 @@ module Raca
         etag = upload_io_standard(segment_key, segment_io, segment_io.size, headers)
         segments << {path: "#{@container_name}/#{segment_key}", etag: etag, size_bytes: segment_io.size}
       end
-      manifest_key = "#{key}?multipart-manifest=put"
+      full_path = File.join(container_path, Raca::Util.url_encode(key)) + "?multipart-manifest=put"
       manifest_body = StringIO.new(JSON.dump(segments))
-      upload_io_standard(manifest_key, manifest_body, manifest_body.size)
+      put_upload(full_path, {}, manifest_body.string.bytesize, manifest_body)
+    end
+
+    def put_upload(full_path, headers, byte_count, io)
+      request = Net::HTTP::Put.new(full_path, headers)
+      request.body_stream = io
+      request.content_length = byte_count
+      response = storage_request(request)
+      response['ETag']
     end
 
     def cdn_request(request, &block)
@@ -339,7 +342,7 @@ module Raca
     end
 
     def container_path
-      @container_path ||= File.join(storage_path, container_name)
+      @container_path ||= File.join(storage_path, Raca::Util.url_encode(container_name))
     end
 
     def extension_content_type(path)
