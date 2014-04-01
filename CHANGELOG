@@ -1,6 +1,8 @@
 v0.3.0 (30th March 2014)
 * Added an optional headers param to Raca::Container#upload
 * Added the details option to Raca::Container#list
+* Fixed Raca::Container to work with container and object names that
+  need to be escaped (spaces, some punctuation, utf8 characters, etc)
 
 v0.2.0 (19th March 2014)
 * Breaking API changes to Raca::Servers and Raca:Server
