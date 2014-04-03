@@ -425,7 +425,7 @@ describe Raca::Container do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 1 of #{max} items from /account/test")
+          logger.should_receive(:debug).with("retrieving up to 1 items from /account/test")
           cloud_container.list(max: max)
         end
 
@@ -457,7 +457,7 @@ describe Raca::Container do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 10000 of 100000 items from /account/test")
+          logger.should_receive(:debug).with("retrieving up to 100000 items from /account/test")
           cloud_container.list(max: max)
         end
 
@@ -500,7 +500,7 @@ describe Raca::Container do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 10000 of 10001 items from /account/test")
+          logger.should_receive(:debug).with("retrieving up to 10001 items from /account/test")
           cloud_container.list(max: max)
         end
 
@@ -509,7 +509,7 @@ describe Raca::Container do
         end
 
         it 'should log what it has done when complete' do
-          logger.should_receive(:debug).with("Got 10000 items; requesting 1 more.")
+          logger.should_receive(:debug).with("Got 10000 items; requesting 10000 more.")
           cloud_container.list(max: max)
         end
       end
@@ -527,7 +527,7 @@ describe Raca::Container do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /account/test")
+          logger.should_receive(:debug).with("retrieving up to 1 items from /account/test")
           cloud_container.list(max: max, prefix: prefix)
         end
 
@@ -563,7 +563,7 @@ describe Raca::Container do
         end
 
         it 'should log what it intends to do' do
-          logger.should_receive(:debug).with("retrieving up to 1 of 1 items from /account/test")
+          logger.should_receive(:debug).with("retrieving up to 1 items from /account/test")
           cloud_container.list(max: max, details: true)
         end
 

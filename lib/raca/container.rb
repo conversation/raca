@@ -112,12 +112,12 @@ module Raca
     # details - return extra details for each file - size, md5, etc
     #
     def list(options = {})
-      max = options.fetch(:max, MAX_ITEMS_PER_LIST)
+      max = options.fetch(:max, 100_000_000)
       marker = options.fetch(:marker, nil)
       prefix = options.fetch(:prefix, nil)
       details = options.fetch(:details, nil)
       limit = [max, MAX_ITEMS_PER_LIST].min
-      log "retrieving up to #{limit} of #{max} items from #{container_path}"
+      log "retrieving up to #{max} items from #{container_path}"
       request = Net::HTTP::Get.new(list_request_path(marker, prefix, details, limit))
       result = storage_request(request).body || ""
       if details
@@ -131,8 +131,8 @@ module Raca
         elsif items.length < limit
           log "Got #{items.length} items; there can't be any more."
         else
-          log "Got #{items.length} items; requesting #{max - limit} more."
-          items.concat list(max: max - limit, marker: items.last, prefix: prefix, details: details)
+          log "Got #{items.length} items; requesting #{limit} more."
+          items.concat list(max: max-items.length, marker: items.last, prefix: prefix, details: details)
         end
       }
     end
