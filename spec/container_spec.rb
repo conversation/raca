@@ -581,6 +581,57 @@ describe Raca::Container do
           cloud_container.list(max: max, details: true)
         end
       end
+      context 'when a detailed list is requested and the results are paged' do
+        let(:max) { 10001 }
+        let(:result) {
+          {
+            "hash"=>"af580187547b398e9bca73f936643dc5",
+            "last_modified"=>"2013-08-06T05:01:17.769500",
+            "bytes"=>56,
+            "name"=>"csv/2.csv",
+            "content_type"=>"text/csv"
+          }
+        }
+        let(:json) { JSON.dump(result) }
+        before(:each) do
+          stub_request(:get, "https://the-cloud.com/account/test?format=json&limit=10000").with(
+            :headers => {
+              'Accept'=>'*/*',
+              'User-Agent'=>'Ruby',
+              'X-Auth-Token'=>'token'
+            }
+          ).to_return(
+            :status => 200,
+            :body => JSON.dump((1..10000).map { result }),
+            :headers => {}
+          )
+          stub_request(:get, "https://the-cloud.com/account/test?format=json&limit=1&marker=csv/2.csv").with(
+            :headers => {
+              'Accept'=>'*/*',
+              'User-Agent'=>'Ruby',
+              'X-Auth-Token'=>'token'
+            }
+          ).to_return(
+            :status => 200,
+            :body => JSON.dump([result]),
+            :headers => {}
+          )
+        end
+
+        it 'should log what it intends to do' do
+          logger.should_receive(:debug).with("retrieving up to 10001 items from /account/test")
+          cloud_container.list(max: max, details: true)
+        end
+
+        it 'should be an array of length found by cloud_request' do
+          cloud_container.list(max: max, details: true).length.should eql(10001)
+        end
+
+        it 'should log what it has done when complete' do
+          logger.should_receive(:debug).with("Got 10000 items; requesting 10000 more.")
+          cloud_container.list(max: max, details: true)
+        end
+      end
     end
 
     describe '#search' do

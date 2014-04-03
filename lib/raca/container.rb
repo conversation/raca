@@ -132,7 +132,8 @@ module Raca
           log "Got #{items.length} items; there can't be any more."
         else
           log "Got #{items.length} items; requesting #{limit} more."
-          items.concat list(max: max-items.length, marker: items.last, prefix: prefix, details: details)
+          details ? marker = items.last["name"] : marker = items.last
+          items.concat list(max: max-items.length, marker: marker, prefix: prefix, details: details)
         end
       }
     end
