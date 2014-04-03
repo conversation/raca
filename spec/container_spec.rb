@@ -746,13 +746,15 @@ describe Raca::Container do
       context 'when the object name has no spaces' do
         it 'should returned a signed URL' do
           url = cloud_container.expiring_url("foo.txt", "secret", 1234567890)
-          url.should == "https://the-cloud.com/account/test/foo.txt?temp_url_sig=596355666ef72a9da6b03de32e9dd4ac003ee9be&temp_url_expires=1234567890"
+          expected = "https://the-cloud.com/account/test/foo.txt?temp_url_sig=596355666ef72a9da6b03de32e9dd4ac003ee9be&temp_url_expires=1234567890"
+          url.should == expected
         end
       end
       context 'when the object name has a spaces' do
         it 'should returned a signed URL' do
           url = cloud_container.expiring_url("foo bar.txt", "secret", 1234567890)
-          url.should == "https://the-cloud.com/account/test/foo%20bar.txt?temp_url_sig=cf817a7dcd409b40c65da11653a1652b62fe44fe&temp_url_expires=1234567890"
+          exp = "https://the-cloud.com/account/test/foo%20bar.txt?temp_url_sig=cf817a7dcd409b40c65da11653a1652b62fe44fe&temp_url_expires=1234567890"
+          url.should == exp
         end
       end
     end
