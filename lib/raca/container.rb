@@ -211,8 +211,8 @@ module Raca
     #
     def list_request_path(marker, prefix, details, limit)
       query_string = "limit=#{limit}"
-      query_string += "&marker=#{marker}" if marker
-      query_string += "&prefix=#{prefix}" if prefix
+      query_string += "&marker=#{Raca::Util.url_encode(marker)}" if marker
+      query_string += "&prefix=#{Raca::Util.url_encode(prefix)}" if prefix
       query_string += "&format=json"      if details
       container_path + "?#{query_string}"
     end
