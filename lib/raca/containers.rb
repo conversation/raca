@@ -23,7 +23,7 @@ module Raca
     #
     def metadata
       log "retrieving containers metadata from #{storage_path}"
-      response    = storage_request(Net::HTTP::Head.new(storage_path))
+      response    = storage_client.head(storage_path)
       {
         :containers => response["X-Account-Container-Count"].to_i,
         :objects    => response["X-Account-Object-Count"].to_i,
@@ -41,8 +41,7 @@ module Raca
     def set_temp_url_key(secret)
       log "setting Account Temp URL Key on #{storage_path}"
 
-      request = Net::HTTP::Post.new(storage_path, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
-      response = storage_request(request)
+      response = storage_client.post(storage_path, nil, "X-Account-Meta-Temp-Url-Key" => secret.to_s)
       (200..299).cover?(response.code.to_i)
     end
 
@@ -56,46 +55,8 @@ module Raca
       URI.parse(@storage_url).path
     end
 
-    def storage_request(request, &block)
-      cloud_request(request, storage_host, &block)
-    end
-
-    def cloud_request(request, hostname, &block)
-      cloud_http(hostname) do |http|
-        request['X-Auth-Token'] = @account.auth_token
-        http.request(request, &block)
-      end
-    end
-
-    def cloud_http(hostname, &block)
-      Net::HTTP.new(hostname, 443).tap {|http|
-        http.use_ssl = true
-        http.read_timeout = 70
-      }.start do |http|
-        response = block.call http
-        if response.is_a?(Net::HTTPUnauthorized)
-          log "Rackspace returned HTTP 401; refreshing auth before retrying."
-          @account.refresh_cache
-          response = block.call http
-        end
-        if response.is_a?(Net::HTTPSuccess)
-          response
-        else
-          raise_on_error(response)
-        end
-        response
-      end
-    end
-
-    def raise_on_error(response)
-      error_klass = case response.code.to_i
-      when 400 then BadRequestError
-      when 404 then NotFoundError
-      when 500 then ServerError
-      else
-        HTTPError
-      end
-      raise error_klass, "Rackspace returned HTTP status #{response.code}"
+    def storage_client
+      @storage_client ||= @account.http_client(storage_host)
     end
 
     def log(msg)

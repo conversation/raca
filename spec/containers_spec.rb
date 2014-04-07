@@ -7,6 +7,7 @@ describe Raca::Containers do
     info.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
     info.stub(:auth_token).and_return('token')
     info.stub(:refresh_cache).and_return(true)
+    info.stub(:http_client).and_return(Raca::HttpClient.new(info, "the-cloud.com"))
     info
   }
   let!(:logger) { double(Object).as_null_object }
