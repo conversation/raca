@@ -70,7 +70,7 @@ module Raca
       Raca::Containers.new(self, region)
     end
 
-    # Return a Raca::Containers object for a region. Use this to interact with the
+    # Return a Raca::Servers object for a region. Use this to interact with the
     # next gen cloud servers service.
     #
     #     account = Raca::Account.new("username", "secret")
