@@ -108,6 +108,12 @@ module Raca
       }
     end
 
+    # Return a Raca::HttpClient suitable for making requests to hostname.
+    #
+    def http_client(hostname)
+      Raca::HttpClient.new(self, hostname)
+    end
+
     private
 
     def raise_on_error(response)

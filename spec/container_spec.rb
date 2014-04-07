@@ -40,9 +40,11 @@ describe Raca::Container do
       info.stub(:refresh_cache).and_return(true)
       info
     }
+    let!(:storage_client) { Raca::HttpClient.new(account, "the-cloud.com") }
     let!(:cloud_container) { Raca::Container.new(account, :ord, 'test') }
 
     before(:each) do
+      account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
       stub_request(:head, "https://the-cloud.com/account/test").with(
         :headers => {'X-Auth-Token'=>'stale_token'}
       ).to_return(:status => 401, :body => "")
@@ -68,6 +70,12 @@ describe Raca::Container do
       info.stub(:refresh_cache).and_return(true)
       info
     }
+    let!(:storage_client) {
+      Raca::HttpClient.new(account, "the-cloud.com")
+    }
+    let!(:cdn_client) {
+      Raca::HttpClient.new(account, "cdn.the-cloud.com")
+    }
     let!(:logger) { double(Object).as_null_object }
     let!(:cloud_container) { Raca::Container.new(account, :ord, 'test', logger: logger) }
 
@@ -77,6 +85,7 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             stub_request(:put, "https://the-cloud.com/account/test/key").with(
               :body => "some string",
               :headers => {
@@ -97,6 +106,7 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             stub_request(:put, "https://the-cloud.com/account/test/key.zip").with(
               :body => "some string",
               :headers => {
@@ -117,6 +127,7 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             stub_request(:put, "https://the-cloud.com/account/test/key").with(
               :body => "some string",
               :headers => {
@@ -137,6 +148,7 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             stub_request(:put, "https://the-cloud.com/account/test/chunky%20bacon.txt").with(
               :body => "some string",
               :headers => {
@@ -157,6 +169,7 @@ describe Raca::Container do
 
       context 'with a File object' do
         before(:each) do
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {
               'Accept'=>'*/*',
@@ -180,6 +193,7 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {
               'Accept'=>'*/*',
@@ -206,6 +220,7 @@ describe Raca::Container do
         end
 
         before(:each) do
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           stub_request(:put, "https://the-cloud.com/account/test/key.000").with(
             :headers => {
               'Content-Length'=>'3',
@@ -244,8 +259,9 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_const("Raca::Container::RETRY_PAUSE", 0)
+          stub_const("Raca::HttpClient::RETRY_PAUSE", 0)
 
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
@@ -262,8 +278,9 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_const("Raca::Container::RETRY_PAUSE", 0)
+          stub_const("Raca::HttpClient::RETRY_PAUSE", 0)
 
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           stub_request(:put, "https://the-cloud.com/account/test/key").with(
             :headers => {'X-Auth-Token'=>'token'}
           ).to_raise(Timeout::Error, Timeout::Error, Timeout::Error, Timeout::Error)
@@ -287,6 +304,7 @@ describe Raca::Container do
 
     describe '#delete' do
       before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
         stub_request(:delete, "https://the-cloud.com/account/test/key").with(
           :headers => {
             'Accept'=>'*/*',
@@ -308,6 +326,7 @@ describe Raca::Container do
 
     describe '#purge_from_akamai' do
       before(:each) do
+        account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
         stub_request(:delete, "https://cdn.the-cloud.com/account/test/key").with(
           :headers => {
             'Accept'=>'*/*',
@@ -330,6 +349,7 @@ describe Raca::Container do
 
     describe '#object_metadata' do
       before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
         stub_request(:head, "https://the-cloud.com/account/test/key").with(
           :headers => {
             'X-Auth-Token'=>'token'
@@ -356,6 +376,7 @@ describe Raca::Container do
     describe '#download' do
       context 'successfully calling cloud_request' do
         before(:each) do
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           @body = 'The response has this as the body'
           stub_request(:get, "https://the-cloud.com/account/test/key").with(
             :headers => {
@@ -407,6 +428,9 @@ describe Raca::Container do
     end
 
     describe '#list' do
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
       context 'requesting fewer items than the max per list API call' do
         let(:max) { 1 }
 
@@ -637,6 +661,10 @@ describe Raca::Container do
     describe '#search' do
       let(:search_term) { 'foo' }
 
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
+
       context '3 results found' do
         before(:each) do
           stub_request(:get, "https://the-cloud.com/account/test?limit=10000&prefix=foo").with(
@@ -677,6 +705,9 @@ describe Raca::Container do
     end
 
     describe '#metadata' do
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
       context "with a simple container name" do
         before(:each) do
           stub_request(:head, "https://the-cloud.com/account/test").with(
@@ -737,6 +768,7 @@ describe Raca::Container do
 
     describe '#cdn_metadata' do
       before(:each) do
+        account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
         stub_request(:head, "https://cdn.the-cloud.com/account/test").with(
           :headers => {
             'Accept'=>'*/*',
@@ -774,6 +806,7 @@ describe Raca::Container do
 
     describe '#cdn_enable' do
       before(:each) do
+        account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
         stub_request(:put, "https://cdn.the-cloud.com/account/test").with(
           :headers => {
             'Accept'=>'*/*',

@@ -1,4 +1,3 @@
-require 'net/http'
 require 'digest/md5'
 require 'openssl'
 require 'uri'
@@ -15,7 +14,6 @@ module Raca
     MAX_ITEMS_PER_LIST = 10_000
     LARGE_FILE_THRESHOLD = 5_368_709_120 # 5 Gb
     LARGE_FILE_SEGMENT_SIZE = 104_857_600 # 100 Mb
-    RETRY_PAUSE = 5
 
     attr_reader :container_name
 
@@ -52,7 +50,7 @@ module Raca
     def delete(key)
       log "deleting #{key} from #{container_path}"
       object_path = File.join(container_path, Raca::Util.url_encode(key))
-      response = storage_request(Net::HTTP::Delete.new(object_path))
+      response = storage_client.delete(object_path)
       (200..299).cover?(response.code.to_i)
     end
 
@@ -65,10 +63,10 @@ module Raca
     #
     def purge_from_akamai(key, email_address)
       log "Requesting #{File.join(container_path, key)} to be purged from the CDN"
-      response = cdn_request(Net::HTTP::Delete.new(
+      response = cdn_client.delete(
         File.join(container_path, Raca::Util.url_encode(key)),
         'X-Purge-Email' => email_address
-      ))
+      )
       (200..299).cover?(response.code.to_i)
     end
 
@@ -78,7 +76,7 @@ module Raca
       object_path = File.join(container_path, Raca::Util.url_encode(key))
       log "Requesting metadata from #{object_path}"
 
-      response = storage_request(Net::HTTP::Head.new(object_path))
+      response = storage_client.head(object_path)
       {
         :content_type => response["Content-Type"],
         :bytes => response["Content-Length"].to_i
@@ -92,7 +90,7 @@ module Raca
     def download(key, filepath)
       log "downloading #{key} from #{container_path}"
       object_path = File.join(container_path, Raca::Util.url_encode(key))
-      response = storage_request(Net::HTTP::Get.new(object_path)) do |response|
+      response = storage_client.get(object_path) do |response|
         File.open(filepath, 'wb') do |io|
           response.read_body do |chunk|
             io.write(chunk)
@@ -118,8 +116,8 @@ module Raca
       details = options.fetch(:details, nil)
       limit = [max, MAX_ITEMS_PER_LIST].min
       log "retrieving up to #{max} items from #{container_path}"
-      request = Net::HTTP::Get.new(list_request_path(marker, prefix, details, limit))
-      result = storage_request(request).body || ""
+      request_path = list_request_path(marker, prefix, details, limit)
+      result = storage_client.get(request_path).body || ""
       if details
         result = JSON.parse(result)
       else
@@ -152,7 +150,7 @@ module Raca
     #
     def metadata
       log "retrieving container metadata from #{container_path}"
-      response = storage_request(Net::HTTP::Head.new(container_path))
+      response = storage_client.head(container_path)
       {
         :objects => response["X-Container-Object-Count"].to_i,
         :bytes => response["X-Container-Bytes-Used"].to_i
@@ -164,7 +162,7 @@ module Raca
     #
     def cdn_metadata
       log "retrieving container CDN metadata from #{container_path}"
-      response = cdn_request(Net::HTTP::Head.new(container_path))
+      response = cdn_client.head(container_path)
       {
         :cdn_enabled => response["X-CDN-Enabled"] == "True",
         :host => response["X-CDN-URI"],
@@ -184,7 +182,7 @@ module Raca
     def cdn_enable(ttl = 259200)
       log "enabling CDN access to #{container_path} with a cache expiry of #{ttl / 60} minutes"
 
-      response = cdn_request(Net::HTTP::Put.new(container_path, "X-TTL" => ttl.to_i.to_s))
+      response = cdn_client.put(container_path, "X-TTL" => ttl.to_i.to_s)
       (200..299).cover?(response.code.to_i)
     end
 
@@ -261,66 +259,16 @@ module Raca
     end
 
     def put_upload(full_path, headers, byte_count, io)
-      request = Net::HTTP::Put.new(full_path, headers)
-      request.body_stream = io
-      request.content_length = byte_count
-      response = storage_request(request)
+      response = storage_client.streaming_put(full_path, io, byte_count, headers)
       response['ETag']
     end
 
-    def cdn_request(request, &block)
-      cloud_request(request, cdn_host, &block)
+    def cdn_client
+      @cdn_client ||= @account.http_client(cdn_host)
     end
 
-    def storage_request(request, &block)
-      cloud_request(request, storage_host, &block)
-    end
-
-    def cloud_request(request, hostname, retries = 0, &block)
-      cloud_http(hostname) do |http|
-        request['X-Auth-Token'] = @account.auth_token
-        http.request(request, &block)
-      end
-    rescue Timeout::Error
-      if retries >= 3
-        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
-      end
-
-      retry_interval = RETRY_PAUSE + (retries.to_i * RETRY_PAUSE) # Retry after 5, 10, 15 and 20 seconds
-      log "Rackspace timed out: retrying after #{retry_interval}s"
-      sleep(retry_interval)
-
-      cloud_request(request, hostname, retries + 1, &block)
-    end
-
-    def cloud_http(hostname, &block)
-      Net::HTTP.new(hostname, 443).tap {|http|
-        http.use_ssl = true
-        http.read_timeout = 70
-      }.start do |http|
-        response = block.call http
-        if response.is_a?(Net::HTTPUnauthorized)
-          log "Rackspace returned HTTP 401; refreshing auth before retrying."
-          @account.refresh_cache
-          response = block.call http
-        end
-        if response.is_a?(Net::HTTPSuccess)
-          response
-        else
-          raise_on_error(response)
-        end
-      end
-    end
-
-    def raise_on_error(response)
-      error_klass = case response.code.to_i
-      when 400 then BadRequestError
-      when 404 then NotFoundError
-      when 500 then ServerError
-      else
-        HTTPError
-      end
-      raise error_klass, "Rackspace returned HTTP status #{response.code}"
+    def storage_client
+      @storage_client ||= @account.http_client(storage_host)
     end
 
     def log(msg)
