@@ -7,6 +7,7 @@ describe Raca::Servers do
     info.stub(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
     info.stub(:auth_token).and_return('token')
     info.stub(:refresh_cache).and_return(true)
+    info.stub(:http_client).and_return(Raca::HttpClient.new(info, "the-cloud.com"))
     info
   }
 
