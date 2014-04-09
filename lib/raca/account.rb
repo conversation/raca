@@ -81,7 +81,7 @@ module Raca
     end
 
     # Raca classes use this method to occasionally re-authenticate with the rackspace
-    # servers. You can probable ignore it.
+    # servers. You can probably ignore it.
     #
     def refresh_cache
       Net::HTTP.new('identity.api.rackspacecloud.com', 443).tap {|http|
