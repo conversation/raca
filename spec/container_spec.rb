@@ -28,38 +28,6 @@ describe Raca::Container do
 
   end
 
-  # TODO move this spec onto HttpClient. The token refresh and request retry is transparent to
-  #      users of HttpClient (like Container)
-  describe "metadata request with stale auth details" do
-    let!(:account) {
-      info = double(Raca::Account)
-      info.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-      info.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-      info.stub(:auth_token).and_return('stale_token','fresh_token')
-      info.stub(:refresh_cache).and_return(true)
-      info
-    }
-    let!(:storage_client) { Raca::HttpClient.new(account, "the-cloud.com") }
-    let!(:cloud_container) { Raca::Container.new(account, :ord, 'test') }
-
-    before(:each) do
-      account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
-      stub_request(:head, "https://the-cloud.com/account/test").with(
-        :headers => {'X-Auth-Token'=>'stale_token'}
-      ).to_return(:status => 401, :body => "")
-      stub_request(:head, "https://the-cloud.com/account/test").with(
-        :headers => {'X-Auth-Token'=>'fresh_token'}
-      ).to_return(
-        :status => 200,
-        :headers => {'X-Container-Object-Count' => 5, 'X-Container-Bytes-Used' => 1200}
-      )
-    end
-
-    it "should automatically re-auth and try again" do
-      cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
-    end
-  end
-
   describe 'instance method: ' do
     let!(:account) {
       info = double(Raca::Account)
