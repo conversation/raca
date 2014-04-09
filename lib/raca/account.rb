@@ -84,6 +84,8 @@ module Raca
     # servers. You can probable ignore it.
     #
     def refresh_cache
+      # Raca::HttpClient depends on Raca::Account, so we intentionally don't use it here
+      # to avoid a circular dependency
       Net::HTTP.new('identity.api.rackspacecloud.com', 443).tap {|http|
         http.use_ssl = true
       }.start {|http|
