@@ -2,11 +2,6 @@ require 'spec_helper'
 
 describe Raca::Container do
 
-  describe "MAX_ITEMS_PER_LIST" do
-    subject { Raca::Container::MAX_ITEMS_PER_LIST }
-    it { should eql(10_000) }
-  end
-
   describe '#initialization' do
     let!(:account) {
       info = double(Raca::Account)
