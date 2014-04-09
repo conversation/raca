@@ -5,6 +5,9 @@ v0.3.0 (30th March 2014)
   need to be escaped (spaces, some punctuation, utf8 characters, etc)
 * Fixed Raca::Container to return all items for containers that contain
   more than 10,000 objects
+* Refactored internal management of HTTP requests to reduce duplication
+  and improve testability. There should be no visible change to the pub
+  API of raca
 
 v0.2.0 (19th March 2014)
 * Breaking API changes to Raca::Servers and Raca:Server

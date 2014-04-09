@@ -2,11 +2,6 @@ require 'spec_helper'
 
 describe Raca::Container do
 
-  describe "MAX_ITEMS_PER_LIST" do
-    subject { Raca::Container::MAX_ITEMS_PER_LIST }
-    it { should eql(10_000) }
-  end
-
   describe '#initialization' do
     let!(:account) {
       info = double(Raca::Account)
@@ -28,37 +23,6 @@ describe Raca::Container do
 
   end
 
-  # This spec could be written for any public method on Raca::Container. The point
-  # is to test the automatic retry after receiving a 401 response, not to test the
-  # metadata method itself
-  describe "metadata request with stale auth details" do
-    let!(:account) {
-      info = double(Raca::Account)
-      info.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-      info.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-      info.stub(:auth_token).and_return('stale_token','fresh_token')
-      info.stub(:refresh_cache).and_return(true)
-      info
-    }
-    let!(:cloud_container) { Raca::Container.new(account, :ord, 'test') }
-
-    before(:each) do
-      stub_request(:head, "https://the-cloud.com/account/test").with(
-        :headers => {'X-Auth-Token'=>'stale_token'}
-      ).to_return(:status => 401, :body => "")
-      stub_request(:head, "https://the-cloud.com/account/test").with(
-        :headers => {'X-Auth-Token'=>'fresh_token'}
-      ).to_return(
-        :status => 200,
-        :headers => {'X-Container-Object-Count' => 5, 'X-Container-Bytes-Used' => 1200}
-      )
-    end
-
-    it "should automatically re-auth and try again" do
-      cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
-    end
-  end
-
   describe 'instance method: ' do
     let!(:account) {
       info = double(Raca::Account)
@@ -67,6 +31,12 @@ describe Raca::Container do
       info.stub(:auth_token).and_return('token')
       info.stub(:refresh_cache).and_return(true)
       info
+    }
+    let!(:storage_client) {
+      Raca::HttpClient.new(account, "the-cloud.com")
+    }
+    let!(:cdn_client) {
+      Raca::HttpClient.new(account, "cdn.the-cloud.com")
     }
     let!(:logger) { double(Object).as_null_object }
     let!(:cloud_container) { Raca::Container.new(account, :ord, 'test', logger: logger) }
@@ -77,16 +47,14 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
-            stub_request(:put, "https://the-cloud.com/account/test/key").with(
-              :body => "some string",
-              :headers => {
-                'Accept'=>'*/*',
-                'Content-Length'=>'11',
-                'Content-Type'=>'application/octet-stream',
-                'User-Agent'=>'Ruby',
-                'X-Auth-Token'=>'token'
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+            storage_client.should_receive(:streaming_put).with(
+              "/account/test/key", kind_of(StringIO), 11, 'Content-Type'=>'application/octet-stream', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+            ).and_return(
+              Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+                response.add_field('ETag', 'foo')
               }
-            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+            )
           end
 
           it "should return the ETag header returned from rackspace" do
@@ -97,16 +65,14 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
-            stub_request(:put, "https://the-cloud.com/account/test/key.zip").with(
-              :body => "some string",
-              :headers => {
-                'Accept'=>'*/*',
-                'Content-Length'=>'11',
-                'Content-Type'=>'application/zip',
-                'User-Agent'=>'Ruby',
-                'X-Auth-Token'=>'token'
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+            storage_client.should_receive(:streaming_put).with(
+              "/account/test/key.zip", kind_of(StringIO), 11, 'Content-Type'=>'application/zip', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+            ).and_return(
+              Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+                response.add_field('ETag', 'foo')
               }
-            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+            )
           end
 
           it "should return the ETag header returned from rackspace" do
@@ -117,16 +83,14 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
-            stub_request(:put, "https://the-cloud.com/account/test/key").with(
-              :body => "some string",
-              :headers => {
-                'Accept'=>'*/*',
-                'Content-Length'=>'11',
-                'Content-Type'=>'text/plain',
-                'User-Agent'=>'Ruby',
-                'X-Auth-Token'=>'token'
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+            storage_client.should_receive(:streaming_put).with(
+              "/account/test/key", kind_of(StringIO), 11, 'Content-Type'=>'text/plain', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+            ).and_return(
+              Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+                response.add_field('ETag', 'foo')
               }
-            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+            )
           end
 
           it "should return the ETag header returned from rackspace" do
@@ -137,16 +101,14 @@ describe Raca::Container do
           let(:data_or_path) { StringIO.new('some string', 'r') }
 
           before(:each) do
-            stub_request(:put, "https://the-cloud.com/account/test/chunky%20bacon.txt").with(
-              :body => "some string",
-              :headers => {
-                'Accept'=>'*/*',
-                'Content-Length'=>'11',
-                'Content-Type'=>'text/plain',
-                'User-Agent'=>'Ruby',
-                'X-Auth-Token'=>'token'
+            account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+            storage_client.should_receive(:streaming_put).with(
+              "/account/test/chunky%20bacon.txt", kind_of(StringIO), 11, 'Content-Type'=>'text/plain', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+            ).and_return(
+              Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+                response.add_field('ETag', 'foo')
               }
-            ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+            )
           end
 
           it "should return the ETag header returned from rackspace" do
@@ -157,16 +119,14 @@ describe Raca::Container do
 
       context 'with a File object' do
         before(:each) do
-          stub_request(:put, "https://the-cloud.com/account/test/key").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'Content-Length'=>'0',
-              'Content-Type'=>'text/plain',
-              'Etag'=>'d41d8cd98f00b204e9800998ecf8427e',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'Etag' => 'd41d8cd98f00b204e9800998ecf8427e'
+          ).and_return(
+            Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+              response.add_field('ETag', 'foo')
             }
-          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          )
         end
 
         it "should return the ETag header returned from rackspace" do
@@ -180,16 +140,14 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_request(:put, "https://the-cloud.com/account/test/key").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'Content-Length'=>'0',
-              'Content-Type'=>'text/plain',
-              'Etag'=>'d41d8cd98f00b204e9800998ecf8427e',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'Etag' => 'd41d8cd98f00b204e9800998ecf8427e'
+          ).and_return(
+            Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+              response.add_field('ETag', 'foo')
             }
-          ).to_return(:status => 200, :body => "", :headers => {'ETag' => 'foo'})
+          )
         end
 
         it "should return the ETag header returned from rackspace" do
@@ -206,33 +164,43 @@ describe Raca::Container do
         end
 
         before(:each) do
-          stub_request(:put, "https://the-cloud.com/account/test/key.000").with(
-            :headers => {
-              'Content-Length'=>'3',
-              'X-Auth-Token'=>'token'
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key.000", kind_of(StringIO), 3, 'Content-Type'=>'application/octet-stream', 'Etag' => '900150983cd24fb0d6963f7d28e17f72'
+          ).and_return(
+            Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+              response.add_field('ETag', '1')
             }
-          ).to_return(:status => 200, :body => "", :headers => {ETag: "1" })
-          stub_request(:put, "https://the-cloud.com/account/test/key.001").with(
-            :headers => {
-              'Content-Length'=>'3',
-              'X-Auth-Token'=>'token'
+          )
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key.001", kind_of(StringIO), 3, 'Content-Type'=>'application/octet-stream', 'Etag' => '4ed9407630eb1000c0f6b63842defa7d'
+          ).and_return(
+            Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+              response.add_field('ETag', '2')
             }
-          ).to_return(:status => 200, :body => "", :headers => {ETag: "2" })
-          stub_request(:put, "https://the-cloud.com/account/test/key.002").with(
-            :headers => {
-              'Content-Length'=>'1',
-              'X-Auth-Token'=>'token'
+          )
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key.002", kind_of(StringIO), 1, 'Content-Type'=>'application/octet-stream', 'Etag' => 'b2f5ff47436671b6e533d8dc3614845d'
+          ).and_return(
+            Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+              response.add_field('ETag', '3')
             }
-          ).to_return(:status => 200, :body => "", :headers => {ETag: "3" })
-          stub_request(:put, "https://the-cloud.com/account/test/key?multipart-manifest=put").with(
-            :body => %Q{[{"path":"test/key.000","etag":"1","size_bytes":3},
-                         {"path":"test/key.001","etag":"2","size_bytes":3},
-                         {"path":"test/key.002","etag":"3","size_bytes":1}]}.gsub(/\s+/m,""),
-            :headers => {
-              'Content-Length'=>'151',
-              'X-Auth-Token'=>'token'
+          )
+
+          # Manifest body should be the following JSON, but I can't find a way to specify it
+          # as an expected rgument to streaming_put. Instead I'm asserting the ETag header is
+          # the correct md5sum of the json.
+          #
+          #   [{"path":"test/key.000","etag":"1","size_bytes":3},
+          #    {"path":"test/key.001","etag":"2","size_bytes":3},
+          #    {"path":"test/key.002","etag":"3","size_bytes":1}]
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key?multipart-manifest=put", kind_of(StringIO), 151, {'Etag' => 'e2a71f7e30a443c13f568fa8d60fb3fa'}
+          ).and_return(
+            Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
+              response.add_field('ETag', '1234')
             }
-          ).to_return(:status => 200, :body => "", :headers => {"ETag" => "1234"})
+          )
         end
 
         it "should return the ETag header returned from rackspace" do
@@ -244,32 +212,13 @@ describe Raca::Container do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
-          stub_const("Raca::Container::RETRY_PAUSE", 0)
-
-          stub_request(:put, "https://the-cloud.com/account/test/key").with(
-            :headers => {'X-Auth-Token'=>'token'}
-          ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
-            :status => 200, :body => "", :headers => {"ETag" => "foo"}
-          )
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+          storage_client.should_receive(:streaming_put).with(
+            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'Etag' => 'd41d8cd98f00b204e9800998ecf8427e'
+          ).and_raise(Raca::TimeoutError)
         end
 
-        it "should return the ETag header returned from rackspace" do
-          cloud_container.upload('key', data_or_path).should == 'foo'
-        end
-      end
-
-      context 'with a String object when Rackspace times out four times' do
-        let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
-
-        before(:each) do
-          stub_const("Raca::Container::RETRY_PAUSE", 0)
-
-          stub_request(:put, "https://the-cloud.com/account/test/key").with(
-            :headers => {'X-Auth-Token'=>'token'}
-          ).to_raise(Timeout::Error, Timeout::Error, Timeout::Error, Timeout::Error)
-        end
-
-        it "should raise a descriptive execption" do
+        it "should bubble the same error up" do
           lambda {
             cloud_container.upload('key', data_or_path)
           }.should raise_error(Raca::TimeoutError)
@@ -287,13 +236,8 @@ describe Raca::Container do
 
     describe '#delete' do
       before(:each) do
-        stub_request(:delete, "https://the-cloud.com/account/test/key").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(:status => 200, :body => "", :headers => {})
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+        storage_client.should_receive(:delete).with("/account/test/key").and_return(Net::HTTPSuccess.new("1.1", 200, "OK"))
       end
 
       it 'should log the fact that it deleted the key' do
@@ -308,14 +252,11 @@ describe Raca::Container do
 
     describe '#purge_from_akamai' do
       before(:each) do
-        stub_request(:delete, "https://cdn.the-cloud.com/account/test/key").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token',
-            'X-Purge-Email' => 'services@theconversation.edu.au'
-          }
-        ).to_return(:status => 200, :body => "", :headers => {})
+        account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
+        cdn_client.should_receive(:delete).with(
+          "/account/test/key",
+          "X-Purge-Email" => "services@theconversation.edu.au"
+        ).and_return(Net::HTTPSuccess.new("1.1", 200, "OK"))
       end
 
       it 'should log the fact that it deleted the key' do
@@ -330,14 +271,11 @@ describe Raca::Container do
 
     describe '#object_metadata' do
       before(:each) do
-        stub_request(:head, "https://the-cloud.com/account/test/key").with(
-          :headers => {
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(
-          :status => 200,
-          :headers => {'Content-Length' => '12345', 'Content-Type' => 'text/plain'}
-        )
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+        response = Net::HTTPSuccess.new("1.1", 200, "OK")
+        response.add_field('Content-Length', '12345')
+        response.add_field('Content-Type', 'text/plain')
+        storage_client.should_receive(:head).with("/account/test/key").and_return(response)
       end
 
       it 'should log the fact that it is about to download key' do
@@ -354,73 +292,64 @@ describe Raca::Container do
     end
 
     describe '#download' do
-      context 'successfully calling cloud_request' do
-        before(:each) do
-          @body = 'The response has this as the body'
-          stub_request(:get, "https://the-cloud.com/account/test/key").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(:status => 200, :body => @body, :headers => {"Content-Length" => @body.bytesize})
+      context 'requesting an object that exists' do
+        let!(:body) { "The response has this as the body\n" }
+        let!(:filepath) { File.join(File.dirname(__FILE__), '../tmp', 'cloud_container_test_file') }
 
-          @filepath = File.join(File.dirname(__FILE__), '../tmp', 'cloud_container_test_file')
-          FileUtils.mkdir_p File.dirname @filepath
+        before(:each) do
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+          response = double("Net::HTTPSuccess")
+          response.should_receive(:read_body).with(no_args()).and_yield(body)
+          response.should_receive(:[]).with("Content-Length").and_return(33)
+          storage_client.should_receive(:get).with("/account/test/key").and_yield(response).and_return(response)
+
+          FileUtils.mkdir_p File.dirname(filepath)
         end
 
         it 'should log the fact that it is about to download key' do
           logger.should_receive(:debug).with('downloading key from /account/test')
-          cloud_container.download('key', @filepath)
+          cloud_container.download('key', filepath)
         end
 
         it 'should write the response body to disk' do
-          cloud_container.download('key', @filepath)
-          File.open(@filepath, 'r') { |file| file.readline.should eql(@body) }
+          cloud_container.download('key', filepath)
+          File.read(filepath).should == body
         end
 
         it 'should return the number of bytes downloaded' do
-          cloud_container.download('key', @filepath).should == 33
+          cloud_container.download('key', filepath).should == 33
         end
 
         after(:each) do
-          File.delete(@filepath) if File.exists?(@filepath)
+          File.delete(filepath) if File.exists?(filepath)
         end
       end
 
-      context 'unsuccessfully calling cloud_request' do
+      context "requesting an object that doesn't exist" do
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test/key").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(:status => 404, :body => "", :headers => {})
+          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+          storage_client.should_receive(:get).with("/account/test/key").and_raise(Raca::NotFoundError)
         end
 
-        it 'should log the fact that it is about to download key' do
+        it 'should bubble up the same error' do
           logger.should_receive(:debug).with('downloading key from /account/test')
-          lambda { cloud_container.download('key', @filepath) }.should raise_error
+          lambda {
+            cloud_container.download('key', @filepath)
+          }.should raise_error(Raca::NotFoundError)
         end
       end
     end
 
     describe '#list' do
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
       context 'requesting fewer items than the max per list API call' do
         let(:max) { 1 }
 
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=1").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => "The response has this as the body\n",
-            :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=1").and_return(
+            double("Net::HTTPSuccess", body: "The response has this as the body\n")
           )
         end
 
@@ -443,16 +372,8 @@ describe Raca::Container do
         let(:max) { 100000 }
 
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=10000").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => "The response has this as the body\n",
-            :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=10000").and_return(
+            double("Net::HTTPSuccess", body: "The response has this as the body\n")
           )
         end
 
@@ -475,27 +396,11 @@ describe Raca::Container do
         let(:max) { 10001 }
 
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=10000").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => "The response has this as the body\n"*10000,
-            :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=10000").and_return(
+            double("Net::HTTPSuccess", body: "The response has this as the body\n"*10_000)
           )
-          stub_request(:get, "https://the-cloud.com/account/test?limit=1&marker=The%20response%20has%20this%20as%20the%20body").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => "The response has this as the body\n",
-            :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=1&marker=The%20response%20has%20this%20as%20the%20body").and_return(
+            double("Net::HTTPSuccess", body: "The response has this as the body\n")
           )
         end
 
@@ -519,10 +424,8 @@ describe Raca::Container do
         let(:prefix) { "assets/"}
 
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=1&prefix=assets/").with(
-            :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
-          ).to_return(
-            :status => 200, :body => "assets/foo.css\n", :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=1&prefix=assets/").and_return(
+            double("Net::HTTPSuccess", body: "assets/foo.css\n")
           )
         end
 
@@ -552,13 +455,10 @@ describe Raca::Container do
             "content_type"=>"text/csv"
           }]
         }
-        let(:json) { JSON.dump(result) }
 
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=1&format=json").with(
-            :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
-          ).to_return(
-            :status => 200, :body => json, :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=1&format=json").and_return(
+            double("Net::HTTPSuccess", body: JSON.dump(result))
           )
         end
 
@@ -592,29 +492,12 @@ describe Raca::Container do
             "content_type"=>"text/csv"
           }
         }
-        let(:json) { JSON.dump(result) }
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?format=json&limit=10000").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => JSON.dump((1..10000).map { result }),
-            :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=10000&format=json").and_return(
+            double("Net::HTTPSuccess", body: JSON.dump((1..10000).map {result}))
           )
-          stub_request(:get, "https://the-cloud.com/account/test?format=json&limit=1&marker=csv/2.csv").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => JSON.dump([result]),
-            :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=1&marker=csv/2.csv&format=json").and_return(
+            double("Net::HTTPSuccess", body: JSON.dump([result]))
           )
         end
 
@@ -637,12 +520,14 @@ describe Raca::Container do
     describe '#search' do
       let(:search_term) { 'foo' }
 
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
+
       context '3 results found' do
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=10000&prefix=foo").with(
-            :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
-          ).to_return(
-            :status => 200, :body => "result\n"*3, :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=10000&prefix=foo").and_return(
+            double("Net::HTTPSuccess", body: "result\n"*3)
           )
         end
 
@@ -658,10 +543,8 @@ describe Raca::Container do
 
       context 'no results found' do
         before(:each) do
-          stub_request(:get, "https://the-cloud.com/account/test?limit=10000&prefix=foo").with(
-            :headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby', 'X-Auth-Token'=>'token'}
-          ).to_return(
-            :status => 200, :body => "", :headers => {}
+          storage_client.should_receive(:get).with("/account/test?limit=10000&prefix=foo").and_return(
+            double("Net::HTTPSuccess", body: "")
           )
         end
 
@@ -677,21 +560,16 @@ describe Raca::Container do
     end
 
     describe '#metadata' do
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
       context "with a simple container name" do
         before(:each) do
-          stub_request(:head, "https://the-cloud.com/account/test").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => "",
-            :headers => {
-              'X-Container-Object-Count' => 5,
-              'X-Container-Bytes-Used' => 1200
-            }
+          response = Net::HTTPSuccess.new("1.1", 200, "OK")
+          response.add_field('X-Container-Object-Count', '5')
+          response.add_field('X-Container-Bytes-Used', '1200')
+          storage_client.should_receive(:head).with("/account/test").and_return(
+            response
           )
         end
 
@@ -708,19 +586,11 @@ describe Raca::Container do
         let!(:cloud_container) { Raca::Container.new(account, :ord, 'foo bar') }
 
         before(:each) do
-          stub_request(:head, "https://the-cloud.com/account/foo%20bar").with(
-            :headers => {
-              'Accept'=>'*/*',
-              'User-Agent'=>'Ruby',
-              'X-Auth-Token'=>'token'
-            }
-          ).to_return(
-            :status => 200,
-            :body => "",
-            :headers => {
-              'X-Container-Object-Count' => 5,
-              'X-Container-Bytes-Used' => 1200
-            }
+          response = Net::HTTPSuccess.new("1.1", 200, "OK")
+          response.add_field('X-Container-Object-Count', '5')
+          response.add_field('X-Container-Bytes-Used', '1200')
+          storage_client.should_receive(:head).with("/account/foo%20bar").and_return(
+            response
           )
         end
 
@@ -737,23 +607,16 @@ describe Raca::Container do
 
     describe '#cdn_metadata' do
       before(:each) do
-        stub_request(:head, "https://cdn.the-cloud.com/account/test").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(
-          :status => 200,
-          :body => "",
-          :headers => {
-            'X-CDN-Enabled' => 'True',
-            'X-CDN-URI' => "http://example.com",
-            "X-CDN-STREAMING-URI" => "http://streaming.example.com",
-            "X-CDN-SSL-URI" => "https://example.com",
-            "X-TTL" => 1234,
-            "X-Log-Retention" => "False"
-          }
+        account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
+        response = Net::HTTPSuccess.new("1.1", 200, "OK")
+        response.add_field('X-CDN-Enabled', 'True')
+        response.add_field('X-CDN-URI', "http://example.com")
+        response.add_field("X-CDN-STREAMING-URI", "http://streaming.example.com")
+        response.add_field("X-CDN-SSL-URI", "https://example.com")
+        response.add_field("X-TTL", "1234")
+        response.add_field("X-Log-Retention", "False")
+        cdn_client.should_receive(:head).with("/account/test").and_return(
+          response
         )
       end
 
@@ -763,25 +626,23 @@ describe Raca::Container do
       end
 
       it 'should return a hash containing the number of objects and the total bytes used' do
-        cloud_container.cdn_metadata[:cdn_enabled].should    == true
-        cloud_container.cdn_metadata[:host].should           == "http://example.com"
-        cloud_container.cdn_metadata[:ssl_host].should       == "https://example.com"
-        cloud_container.cdn_metadata[:streaming_host].should == "http://streaming.example.com"
-        cloud_container.cdn_metadata[:ttl].should            == 1234
-        cloud_container.cdn_metadata[:log_retention].should  == false
+        cloud_container.cdn_metadata.tap { |response|
+          response[:cdn_enabled].should    == true
+          response[:host].should           == "http://example.com"
+          response[:ssl_host].should       == "https://example.com"
+          response[:streaming_host].should == "http://streaming.example.com"
+          response[:ttl].should            == 1234
+          response[:log_retention].should  == false
+        }
       end
     end
 
     describe '#cdn_enable' do
       before(:each) do
-        stub_request(:put, "https://cdn.the-cloud.com/account/test").with(
-          :headers => {
-            'Accept'=>'*/*',
-            'X-TTL'=>'60000',
-            'User-Agent'=>'Ruby',
-            'X-Auth-Token'=>'token'
-          }
-        ).to_return(:status => 201, :body => "")
+        account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
+        cdn_client.should_receive(:put).with("/account/test", "X-TTL" => "60000").and_return(
+          Net::HTTPCreated.new("1.1", 201, "OK")
+        )
       end
 
       it 'should log what it indends to do' do

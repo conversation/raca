@@ -56,12 +56,19 @@ module Raca
         }
       end
 
-      data = cloud_request(Net::HTTP::Post.new(servers_path), JSON.dump(request)).body
-      data = JSON.parse(data)['server']
+      response = servers_client.post(servers_path, JSON.dump(request), json_headers)
+      data = JSON.parse(response.body)['server']
       Raca::Server.new(@account, @region, data['id'])
     end
 
     private
+
+    def json_headers
+      {
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json'
+      }
+    end
 
     def servers_host
       @servers_host ||= URI.parse(@servers_url).host
@@ -84,7 +91,7 @@ module Raca
     end
 
     def list
-      json = cloud_request(Net::HTTP::Get.new(servers_path)).body
+      json = servers_client.get(servers_path, json_headers).body
       JSON.parse(json)['servers']
     end
 
@@ -97,7 +104,7 @@ module Raca
 
     def flavors
       @flavors ||= begin
-        data = cloud_request(Net::HTTP::Get.new(flavors_path)).body
+        data = servers_client.get(flavors_path, json_headers).body
         JSON.parse(data)['flavors']
       end
     end
@@ -119,7 +126,7 @@ module Raca
 
     def images
       @images ||= begin
-        data = cloud_request(Net::HTTP::Get.new(images_path)).body
+        data = servers_client.get(images_path, json_headers).body
         JSON.parse(data)['images']
       end
     end
@@ -139,49 +146,8 @@ module Raca
       end
     end
 
-    def cloud_request(request, body = nil)
-      request['X-Auth-Token'] = @account.auth_token
-      request['Content-Type'] = 'application/json'
-      request['Accept']       = 'application/json'
-      cloud_http(servers_host) do |http|
-        http.request(request, body)
-      end
-    end
-
-    def cloud_http(hostname, retries = 3, &block)
-      http = Net::HTTP.new(hostname, 443)
-      http.use_ssl = true
-      http.start do |http|
-        response = block.call http
-        if response.is_a?(Net::HTTPUnauthorized)
-          log "Rackspace returned HTTP 401; refreshing auth before retrying."
-          @account.refresh_cache
-          response = block.call http
-        end
-        if response.is_a?(Net::HTTPSuccess)
-          response
-        else
-          raise_on_error(response)
-        end
-        response
-      end
-    rescue Timeout::Error
-      if retries <= 0
-        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
-      end
-
-      cloud_http(hostname, retries - 1, &block)
-    end
-
-    def raise_on_error(response)
-      error_klass = case response.code.to_i
-      when 400 then BadRequestError
-      when 404 then NotFoundError
-      when 500 then ServerError
-      else
-        HTTPError
-      end
-      raise error_klass, "Rackspace returned HTTP status #{response.code}"
+    def servers_client
+      @servers_client ||= @account.http_client(servers_host)
     end
 
     def log(msg)
