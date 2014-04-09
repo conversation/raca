@@ -208,27 +208,7 @@ describe Raca::Container do
         end
       end
 
-      # TODO convert this spec into a HttpClient spec
       context 'with a String object when Rackspace times out' do
-        let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
-
-        before(:each) do
-          stub_const("Raca::HttpClient::RETRY_PAUSE", 0)
-
-          account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
-          stub_request(:put, "https://the-cloud.com/account/test/key").with(
-            :headers => {'X-Auth-Token'=>'token'}
-          ).to_raise(Timeout::Error, Timeout::Error).then.to_return(
-            :status => 200, :body => "", :headers => {"ETag" => "foo"}
-          )
-        end
-
-        it "should return the ETag header returned from rackspace" do
-          cloud_container.upload('key', data_or_path).should == 'foo'
-        end
-      end
-
-      context 'with a String object when Rackspace times out four times' do
         let(:data_or_path) { File.join(File.dirname(__FILE__), 'fixtures', 'bogus.txt') }
 
         before(:each) do
