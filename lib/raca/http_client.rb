@@ -44,6 +44,7 @@ module Raca
 
     def post(path, body, headers = {})
       request = Net::HTTP::Post.new(path, headers)
+      request.body = body if body
       cloud_request(request)
     end
 
