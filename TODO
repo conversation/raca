@@ -1,7 +1,12 @@
 * region argument to Account#public_endpoint should be optional. Raise
-  an error if the requested service requires a region. Choose the global endpoiint if the to requested service has no regions.
+  an error if the requested service requires a region. Choose the global
+  endpoint if the requested service has no regions.
 
-* Same for Account#servicenet_endpoint
+* consider adding a servicenet option to the Raca::Account constructor. It
+  would default to false. If true, then all service endpoints returned would
+  be for the private rackspace servicenet. Maybe also rename
+  Raca::Account#public_endpoint to just endpoint. It can return public and servicenet
+  endpoints based on the setting.
 
 * reduce duplication in logging
 
