@@ -157,3 +157,8 @@ impact on application boot times.
 
 The Raca version number is < 1.0 because it's highly unstable. Until we release
 a 1.0.0, consider the API of this gem to be unstable.
+
+## License
+
+This library is released undr the MIT License. See the included MIT-LICENSE file
+for further details
