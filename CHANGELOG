@@ -1,12 +1,12 @@
-v0.3.0 (30th March 2014)
+v0.3.0 (12th April 2014)
 * Added an optional headers param to Raca::Container#upload
 * Added the details option to Raca::Container#list
+* Fixed Raca::Container#list to return all items for containers that
+  contain more than 10,000 objects
 * Fixed Raca::Container to work with container and object names that
   need to be escaped (spaces, some punctuation, utf8 characters, etc)
-* Fixed Raca::Container to return all items for containers that contain
-  more than 10,000 objects
 * Refactored internal management of HTTP requests to reduce duplication
-  and improve testability. There should be no visible change to the pub
+  and improve testability. There should be no visible change to the public
   API of raca
 
 v0.2.0 (19th March 2014)
