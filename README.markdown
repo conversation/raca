@@ -153,8 +153,9 @@ library and supports much more of the API than this modest gem.
 
 As of version 1.20.0, fog supports dozens of providers, contains ~152000 lines
 of ruby and adds ~500ms to the boot time of our rails apps. raca is a
-lightweight alternative with minimal dependencies that should have a negligable
-impact on application boot times.
+lightweight, rackspace-only alternative with minimal dependencies that should
+have a negligable impact on application boot times. Version 0.3 has ~700 lines of
+ruby (excluding specs).
 
 ## Compatibility
 
