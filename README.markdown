@@ -45,7 +45,11 @@ You can view the token that will be used for subsequent requests:
 
     puts account.auth_token
 
-Or you can view the URLs for each rackspace cloud API:
+List the available APIs:
+
+    puts account.service_names
+
+... and then view the URLs for each service:
 
     puts account.public_endpoint("cloudFiles", :ord)
 
