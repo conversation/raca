@@ -109,7 +109,7 @@ module Raca
       else
         HTTPError
       end
-      raise error_klass, "Rackspace returned HTTP status #{response.code}"
+      raise error_klass, "Rackspace returned HTTP status #{response.code} (rackspace tx: #{response["X-TRANS-ID"]})"
     end
 
     def log(msg)

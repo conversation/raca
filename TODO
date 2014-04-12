@@ -11,6 +11,3 @@
 * reduce duplication in logging
 
 * Consider adding more response details to our HTTPError classes. Status code, etc
-
-* Is the a request ID included in responses from rackspace? If so, include that
-  on HTTPError instances too.
