@@ -1,3 +1,6 @@
+v0.3.1(14th April 2014)
+* Add the rackspace transaction ID to HTTP exceptions
+
 v0.3.0 (12th April 2014)
 * Added an optional headers param to Raca::Container#upload
 * Added the details option to Raca::Container#list
