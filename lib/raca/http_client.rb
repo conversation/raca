@@ -89,10 +89,7 @@ module Raca
     end
 
     def cloud_http(&block)
-      Net::HTTP.new(@hostname, 443).tap {|http|
-        http.use_ssl = true
-        http.read_timeout = 70
-      }.start do |http|
+      Net::HTTP.start(@hostname, 443, use_ssl: true, read_timeout: 70) do |http|
         response = block.call(http)
         if response.is_a?(Net::HTTPSuccess)
           response
