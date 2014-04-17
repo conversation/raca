@@ -70,7 +70,7 @@ module Raca
         request['X-Auth-Token'] = @account.auth_token
         http.request(request, &block)
       end
-    rescue Raca::NotAuthorizedError
+    rescue Raca::UnauthorizedError
       raise if retries > 0
       log "Rackspace returned HTTP 401; refreshing auth before retrying."
       @account.refresh_cache
@@ -105,7 +105,7 @@ module Raca
     def raise_on_error(response)
       error_klass = case response.code.to_i
       when 400 then BadRequestError
-      when 401 then NotAuthorizedError
+      when 401 then UnauthorizedError
       when 404 then NotFoundError
       when 500 then ServerError
       else

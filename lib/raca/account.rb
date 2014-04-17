@@ -121,7 +121,7 @@ module Raca
     def raise_on_error(response)
       error_klass = case response.code.to_i
       when 400 then BadRequestError
-      when 401 then NotAuthorizedError
+      when 401 then UnauthorizedError
       when 404 then NotFoundError
       when 500 then ServerError
       else

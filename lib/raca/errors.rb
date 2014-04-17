@@ -6,7 +6,7 @@ module Raca
   class BadRequestError < HTTPError; end
 
   # for 401 responses from rackspace
-  class NotAuthorizedError < HTTPError; end
+  class UnauthorizedError < HTTPError; end
 
   # for 404 responses from rackspace
   class NotFoundError < HTTPError; end
