@@ -70,6 +70,12 @@ module Raca
         request['X-Auth-Token'] = @account.auth_token
         http.request(request, &block)
       end
+    rescue Raca::NotAuthorizedError
+      raise if retries > 0
+      log "Rackspace returned HTTP 401; refreshing auth before retrying."
+      @account.refresh_cache
+
+      cloud_request(request, retries + 1, &block)
     rescue Timeout::Error
       if retries >= 3
         raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
@@ -88,11 +94,6 @@ module Raca
         http.read_timeout = 70
       }.start do |http|
         response = block.call http
-        if response.is_a?(Net::HTTPUnauthorized)
-          log "Rackspace returned HTTP 401; refreshing auth before retrying."
-          @account.refresh_cache
-          response = block.call http
-        end
         if response.is_a?(Net::HTTPSuccess)
           response
         else
