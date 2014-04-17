@@ -93,7 +93,7 @@ module Raca
         http.use_ssl = true
         http.read_timeout = 70
       }.start do |http|
-        response = block.call http
+        response = block.call(http)
         if response.is_a?(Net::HTTPSuccess)
           response
         else
