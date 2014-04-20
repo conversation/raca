@@ -213,6 +213,36 @@ describe Raca::HttpClient do
         end
       end
     end
+    context "when the server returns 401 and we retry with a new auth token" do
+      context "with no headers" do
+        let!(:account) {
+          double(Raca::Account).tap { |account|
+            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            account.stub(:auth_token).and_return('stale_token','fresh_token')
+            account.stub(:refresh_cache).and_return(true)
+          }
+        }
+        let!(:client) {
+          Raca::HttpClient.new(account, "the-cloud.com")
+        }
+
+        before do
+          stub_request(:put, "https://the-cloud.com/foo").with(
+            :headers => {'X-Auth-Token'=>'stale_token'},
+            :body => "Body"
+          ).to_return(:status => 401)
+          stub_request(:put, "https://the-cloud.com/foo").with(
+            :headers => {'X-Auth-Token'=>'fresh_token'},
+            :body => "Body"
+          ).to_return(:status => 200)
+        end
+
+        it "should return Net::HTTPSuccess" do
+          client.streaming_put("/foo", StringIO.new("Body"), 4).should be_a(Net::HTTPSuccess)
+        end
+      end
+    end
   end
 
   describe "#post" do
