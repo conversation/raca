@@ -21,17 +21,29 @@ module Raca
 
     def get(path, headers = {}, &block)
       cloud_request(Net::HTTP::Get.new(path, headers), &block)
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      cloud_request(Net::HTTP::Get.new(path, headers), &block)
     end
 
     def head(path, headers = {})
+      cloud_request(Net::HTTP::Head.new(path, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
       cloud_request(Net::HTTP::Head.new(path, headers))
     end
 
     def delete(path, headers = {})
       cloud_request(Net::HTTP::Delete.new(path, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      cloud_request(Net::HTTP::Delete.new(path, headers))
     end
 
     def put(path, headers = {})
+      cloud_request(Net::HTTP::Put.new(path, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
       cloud_request(Net::HTTP::Put.new(path, headers))
     end
 
@@ -40,9 +52,21 @@ module Raca
       request.body_stream = io
       request.content_length = byte_count
       cloud_request(request)
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      io.rewind if io.respond_to?(:rewind)
+      request = Net::HTTP::Put.new(path, headers)
+      request.body_stream = io
+      request.content_length = byte_count
+      cloud_request(request)
     end
 
     def post(path, body, headers = {})
+      request = Net::HTTP::Post.new(path, headers)
+      request.body = body if body
+      cloud_request(request)
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
       request = Net::HTTP::Post.new(path, headers)
       request.body = body if body
       cloud_request(request)
@@ -70,12 +94,6 @@ module Raca
         request['X-Auth-Token'] = @account.auth_token
         http.request(request, &block)
       end
-    rescue Raca::UnauthorizedError
-      raise if retries > 0
-      log "Rackspace returned HTTP 401; refreshing auth before retrying."
-      @account.refresh_cache
-
-      cloud_request(request, retries + 1, &block)
     rescue Timeout::Error
       if retries >= 3
         raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
