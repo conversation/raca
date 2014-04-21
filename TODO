@@ -11,3 +11,6 @@
 * reduce duplication in logging
 
 * Consider adding more response details to our HTTPError classes. Status code, etc
+
+* Is it possible to created signed URLs for uploading files? Could be a nifty way
+  to allow users to upload images directly from the browser
