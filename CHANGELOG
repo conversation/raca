@@ -1,3 +1,6 @@
+XXX (XXX)
+* Added Raca::Container#temp_upload_url
+
 v0.3.3 (26th April 2014)
 * Added a User-Agent header to all requests
 * Remove automatic retries after a rackspace timeout

@@ -666,5 +666,21 @@ describe Raca::Container do
         end
       end
     end
+    describe '#temp_upload_url' do
+      context 'when the object name has no spaces' do
+        it 'should returned a signed URL' do
+          url = cloud_container.temp_upload_url("foo.txt", "secret", 1234567890)
+          expected = "https://the-cloud.com/account/test/foo.txt?temp_url_sig=3c0fc25790a9238f84b6cb34574f454cdcd94d03&temp_url_expires=1234567890"
+          url.should == expected
+        end
+      end
+      context 'when the object name has a spaces' do
+        it 'should returned a signed URL' do
+          url = cloud_container.temp_upload_url("foo bar.txt", "secret", 1234567890)
+          exp = "https://the-cloud.com/account/test/foo%20bar.txt?temp_url_sig=ff857d49eced54b42be6079498af1a1ae3f0561c&temp_url_expires=1234567890"
+          url.should == exp
+        end
+      end
+    end
   end
 end
