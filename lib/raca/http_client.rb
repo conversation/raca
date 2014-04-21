@@ -48,17 +48,11 @@ module Raca
     end
 
     def streaming_put(path, io, byte_count, headers = {})
-      request = Net::HTTP::Put.new(path, headers)
-      request.body_stream = io
-      request.content_length = byte_count
-      cloud_request(request)
+      cloud_request(build_streaming_put_request(path, io, byte_count, headers))
     rescue Raca::UnauthorizedError
       @account.refresh_cache
       io.rewind if io.respond_to?(:rewind)
-      request = Net::HTTP::Put.new(path, headers)
-      request.body_stream = io
-      request.content_length = byte_count
-      cloud_request(request)
+      cloud_request(build_streaming_put_request(path, io, byte_count, headers))
     end
 
     def post(path, body, headers = {})
@@ -73,6 +67,13 @@ module Raca
     end
 
     private
+
+    def build_streaming_put_request(path, io, byte_count, headers)
+      request = Net::HTTP::Put.new(path, headers)
+      request.body_stream = io
+      request.content_length = byte_count
+      request
+    end
 
     # perform an HTTP request to rackpsace.
     #
