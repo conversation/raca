@@ -21,34 +21,59 @@ module Raca
 
     def get(path, headers = {}, &block)
       cloud_request(Net::HTTP::Get.new(path, headers), &block)
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      cloud_request(Net::HTTP::Get.new(path, headers), &block)
     end
 
     def head(path, headers = {})
+      cloud_request(Net::HTTP::Head.new(path, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
       cloud_request(Net::HTTP::Head.new(path, headers))
     end
 
     def delete(path, headers = {})
       cloud_request(Net::HTTP::Delete.new(path, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      cloud_request(Net::HTTP::Delete.new(path, headers))
     end
 
     def put(path, headers = {})
       cloud_request(Net::HTTP::Put.new(path, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      cloud_request(Net::HTTP::Put.new(path, headers))
     end
 
     def streaming_put(path, io, byte_count, headers = {})
-      request = Net::HTTP::Put.new(path, headers)
-      request.body_stream = io
-      request.content_length = byte_count
-      cloud_request(request)
+      cloud_request(build_streaming_put_request(path, io, byte_count, headers))
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      io.rewind if io.respond_to?(:rewind)
+      cloud_request(build_streaming_put_request(path, io, byte_count, headers))
     end
 
     def post(path, body, headers = {})
       request = Net::HTTP::Post.new(path, headers)
       request.body = body if body
       cloud_request(request)
+    rescue Raca::UnauthorizedError
+      @account.refresh_cache
+      request = Net::HTTP::Post.new(path, headers)
+      request.body = body if body
+      cloud_request(request)
     end
 
     private
+
+    def build_streaming_put_request(path, io, byte_count, headers)
+      request = Net::HTTP::Put.new(path, headers)
+      request.body_stream = io
+      request.content_length = byte_count
+      request
+    end
 
     # perform an HTTP request to rackpsace.
     #
@@ -83,16 +108,8 @@ module Raca
     end
 
     def cloud_http(&block)
-      Net::HTTP.new(@hostname, 443).tap {|http|
-        http.use_ssl = true
-        http.read_timeout = 70
-      }.start do |http|
-        response = block.call http
-        if response.is_a?(Net::HTTPUnauthorized)
-          log "Rackspace returned HTTP 401; refreshing auth before retrying."
-          @account.refresh_cache
-          response = block.call http
-        end
+      Net::HTTP.start(@hostname, 443, use_ssl: true, read_timeout: 70) do |http|
+        response = block.call(http)
         if response.is_a?(Net::HTTPSuccess)
           response
         else
@@ -104,6 +121,7 @@ module Raca
     def raise_on_error(response)
       error_klass = case response.code.to_i
       when 400 then BadRequestError
+      when 401 then UnauthorizedError
       when 404 then NotFoundError
       when 500 then ServerError
       else

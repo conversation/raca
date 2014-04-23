@@ -5,6 +5,9 @@ module Raca
   # for 400 responses from rackspace
   class BadRequestError < HTTPError; end
 
+  # for 401 responses from rackspace
+  class UnauthorizedError < HTTPError; end
+
   # for 404 responses from rackspace
   class NotFoundError < HTTPError; end
 
