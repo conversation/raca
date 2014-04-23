@@ -1,3 +1,7 @@
+v0.3.2 (23rd April 2014)
+* Bugfix: correctly handle a 401 response when a stale token is used for
+  a streaming PUT
+
 v0.3.1(14th April 2014)
 * Add the rackspace transaction ID to HTTP exceptions
 
