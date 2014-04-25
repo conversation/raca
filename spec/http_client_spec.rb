@@ -71,32 +71,19 @@ describe Raca::HttpClient do
         end
       end
     end
-    context "when the server times out twice and then works on the third attempt" do
+    context "when the server times out" do
       before do
         stub_const("Raca::HttpClient::RETRY_PAUSE", 0)
 
         stub_request(:get, "https://the-cloud.com/foo").with(
           :headers => {'X-Auth-Token'=>'token'}
-        ).to_raise(Timeout::Error, Timeout::Error).then.to_return(:status => 200, :body => "The Body")
+        ).to_raise(Timeout::Error)
       end
 
       it "should transparently re-try and return Net::HTTPSuccess" do
-        client.get("/foo").should be_a(Net::HTTPSuccess)
-      end
-    end
-    context "when the server times out four times" do
-      before do
-        stub_const("Raca::HttpClient::RETRY_PAUSE", 0)
-
-        stub_request(:get, "https://the-cloud.com/foo").with(
-          :headers => {'X-Auth-Token'=>'token'}
-        ).to_raise(Timeout::Error, Timeout::Error, Timeout::Error, Timeout::Error)
-      end
-
-      it "should raise a Raca::TimeoutError" do
         lambda {
           client.get("/foo")
-        }.should raise_error(Raca::TimeoutError)
+        }.should raise_error(Timeout::Error)
       end
     end
   end

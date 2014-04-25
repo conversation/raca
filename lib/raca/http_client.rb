@@ -78,7 +78,6 @@ module Raca
     # perform an HTTP request to rackpsace.
     #
     # request is a Net::HTTP request object.
-    # retries is an int that counts up as the request is tried after a timeout.
     # This can be called with and without a block. Without a block, the response
     # is returned as you'd expect
     #
@@ -90,21 +89,11 @@ module Raca
     #       puts response
     #     end
     #
-    def cloud_request(request, retries = 0, &block)
+    def cloud_request(request, &block)
       cloud_http do |http|
         request['X-Auth-Token'] = @account.auth_token
         http.request(request, &block)
       end
-    rescue Timeout::Error
-      if retries >= 3
-        raise Raca::TimeoutError, "Timeout from Rackspace while trying #{request.class} to #{request.path}"
-      end
-
-      retry_interval = RETRY_PAUSE + (retries.to_i * RETRY_PAUSE) # Retry after 5, 10, 15 and 20 seconds
-      log "Rackspace timed out: retrying after #{retry_interval}s"
-      sleep(retry_interval)
-
-      cloud_request(request, retries + 1, &block)
     end
 
     def cloud_http(&block)
