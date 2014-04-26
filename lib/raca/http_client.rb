@@ -92,7 +92,7 @@ module Raca
     def cloud_request(request, &block)
       cloud_http do |http|
         request['X-Auth-Token'] = @account.auth_token
-        request['User-Agent'] = "raca 0.3.2 (http://rubygems.org/gems/raca)"
+        request['User-Agent'] = "raca 0.3.3 (http://rubygems.org/gems/raca)"
         http.request(request, &block)
       end
     end

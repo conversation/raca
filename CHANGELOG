@@ -1,3 +1,9 @@
+v0.3.3 (26th April 2014)
+* Added a User-Agent header to all requests
+* Remove automatic retries after a rackspace timeout
+* Bugfix: correctly upload files > 5Gb
+* Bugfix: Use the correct ETag header for uploads
+
 v0.3.2 (23rd April 2014)
 * Bugfix: correctly handle a 401 response when a stale token is used for
   a streaming PUT
