@@ -49,7 +49,7 @@ describe Raca::Container do
           before(:each) do
             account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             storage_client.should_receive(:streaming_put).with(
-              "/account/test/key", kind_of(StringIO), 11, 'Content-Type'=>'application/octet-stream', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+              "/account/test/key", kind_of(StringIO), 11, 'Content-Type'=>'application/octet-stream', 'ETag' => '5ac749fbeec93607fc28d666be85e73a'
             ).and_return(
               Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
                 response.add_field('ETag', 'foo')
@@ -67,7 +67,7 @@ describe Raca::Container do
           before(:each) do
             account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             storage_client.should_receive(:streaming_put).with(
-              "/account/test/key.zip", kind_of(StringIO), 11, 'Content-Type'=>'application/zip', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+              "/account/test/key.zip", kind_of(StringIO), 11, 'Content-Type'=>'application/zip', 'ETag' => '5ac749fbeec93607fc28d666be85e73a'
             ).and_return(
               Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
                 response.add_field('ETag', 'foo')
@@ -85,7 +85,7 @@ describe Raca::Container do
           before(:each) do
             account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             storage_client.should_receive(:streaming_put).with(
-              "/account/test/key", kind_of(StringIO), 11, 'Content-Type'=>'text/plain', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+              "/account/test/key", kind_of(StringIO), 11, 'Content-Type'=>'text/plain', 'ETag' => '5ac749fbeec93607fc28d666be85e73a'
             ).and_return(
               Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
                 response.add_field('ETag', 'foo')
@@ -103,7 +103,7 @@ describe Raca::Container do
           before(:each) do
             account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
             storage_client.should_receive(:streaming_put).with(
-              "/account/test/chunky%20bacon.txt", kind_of(StringIO), 11, 'Content-Type'=>'text/plain', 'Etag' => '5ac749fbeec93607fc28d666be85e73a'
+              "/account/test/chunky%20bacon.txt", kind_of(StringIO), 11, 'Content-Type'=>'text/plain', 'ETag' => '5ac749fbeec93607fc28d666be85e73a'
             ).and_return(
               Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
                 response.add_field('ETag', 'foo')
@@ -121,7 +121,7 @@ describe Raca::Container do
         before(:each) do
           account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'Etag' => 'd41d8cd98f00b204e9800998ecf8427e'
+            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'ETag' => 'd41d8cd98f00b204e9800998ecf8427e'
           ).and_return(
             Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
               response.add_field('ETag', 'foo')
@@ -142,7 +142,7 @@ describe Raca::Container do
         before(:each) do
           account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'Etag' => 'd41d8cd98f00b204e9800998ecf8427e'
+            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'ETag' => 'd41d8cd98f00b204e9800998ecf8427e'
           ).and_return(
             Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
               response.add_field('ETag', 'foo')
@@ -166,21 +166,21 @@ describe Raca::Container do
         before(:each) do
           account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key.000", kind_of(StringIO), 3, 'Content-Type'=>'application/octet-stream', 'Etag' => '900150983cd24fb0d6963f7d28e17f72'
+            "/account/test/key.000", kind_of(StringIO), 3, 'Content-Type'=>'application/octet-stream', 'ETag' => '900150983cd24fb0d6963f7d28e17f72'
           ).and_return(
             Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
               response.add_field('ETag', '1')
             }
           )
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key.001", kind_of(StringIO), 3, 'Content-Type'=>'application/octet-stream', 'Etag' => '4ed9407630eb1000c0f6b63842defa7d'
+            "/account/test/key.001", kind_of(StringIO), 3, 'Content-Type'=>'application/octet-stream', 'ETag' => '4ed9407630eb1000c0f6b63842defa7d'
           ).and_return(
             Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
               response.add_field('ETag', '2')
             }
           )
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key.002", kind_of(StringIO), 1, 'Content-Type'=>'application/octet-stream', 'Etag' => 'b2f5ff47436671b6e533d8dc3614845d'
+            "/account/test/key.002", kind_of(StringIO), 1, 'Content-Type'=>'application/octet-stream', 'ETag' => 'b2f5ff47436671b6e533d8dc3614845d'
           ).and_return(
             Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
               response.add_field('ETag', '3')
@@ -210,7 +210,7 @@ describe Raca::Container do
         before(:each) do
           account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'Etag' => 'd41d8cd98f00b204e9800998ecf8427e'
+            "/account/test/key", kind_of(File), 0, 'Content-Type'=>'text/plain', 'ETag' => 'd41d8cd98f00b204e9800998ecf8427e'
           ).and_raise(Raca::TimeoutError)
         end
 
