@@ -255,7 +255,7 @@ module Raca
       end
       full_path = File.join(container_path, Raca::Util.url_encode(key)) + "?multipart-manifest=put"
       manifest_body = StringIO.new(JSON.dump(segments))
-      put_upload(full_path, {'Etag' => md5_io(manifest_body)}, manifest_body.string.bytesize, manifest_body)
+      put_upload(full_path, {}, manifest_body.string.bytesize, manifest_body)
     end
 
     def put_upload(full_path, headers, byte_count, io)

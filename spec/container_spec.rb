@@ -187,15 +187,11 @@ describe Raca::Container do
             }
           )
 
-          # Manifest body should be the following JSON, but I can't find a way to specify it
-          # as an expected rgument to streaming_put. Instead I'm asserting the ETag header is
-          # the correct md5sum of the json.
-          #
-          #   [{"path":"test/key.000","etag":"1","size_bytes":3},
-          #    {"path":"test/key.001","etag":"2","size_bytes":3},
-          #    {"path":"test/key.002","etag":"3","size_bytes":1}]
+          json  = '[{"path":"test/key.000","etag":"1","size_bytes":3},'
+          json += '{"path":"test/key.001","etag":"2","size_bytes":3},'
+          json += '{"path":"test/key.002","etag":"3","size_bytes":1}]'
           storage_client.should_receive(:streaming_put).with(
-            "/account/test/key?multipart-manifest=put", kind_of(StringIO), 151, {'Etag' => 'e2a71f7e30a443c13f568fa8d60fb3fa'}
+            "/account/test/key?multipart-manifest=put", string_io_containing(json), 151, {}
           ).and_return(
             Net::HTTPSuccess.new("1.1", 200, "OK").tap { |response|
               response.add_field('ETag', '1234')
