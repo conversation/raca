@@ -73,8 +73,6 @@ describe Raca::HttpClient do
     end
     context "when the server times out" do
       before do
-        stub_const("Raca::HttpClient::RETRY_PAUSE", 0)
-
         stub_request(:get, "https://the-cloud.com/foo").with(
           :headers => {'X-Auth-Token'=>'token'}
         ).to_raise(Timeout::Error)

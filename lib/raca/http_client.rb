@@ -10,7 +10,6 @@ module Raca
   # see Raca::Account#http_client
   #
   class HttpClient
-    RETRY_PAUSE = 5
 
     def initialize(account, hostname, opts = {})
       @account, @hostname = account, hostname.to_s
