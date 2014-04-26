@@ -232,7 +232,7 @@ module Raca
       if io.respond_to?(:path)
         headers['Content-Type'] ||= extension_content_type(io.path)
       end
-      headers['Etag']           = md5_io(io)
+      headers['ETag']           = md5_io(io)
       headers['Content-Type']   ||= "application/octet-stream"
       if content_type_needs_cors(key)
         headers['Access-Control-Allow-Origin'] = "*"
