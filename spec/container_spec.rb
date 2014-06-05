@@ -18,7 +18,7 @@ describe Raca::Container do
 
     it 'should set the container_name atttribute' do
       container = 'mah_buckit'
-      expect(Raca::Container.new(account, :ord, container).container_name).to eql(container)
+      expect(Raca::Container.new(account, :ord, container).container_name).to eq(container)
     end
 
   end
@@ -355,7 +355,7 @@ describe Raca::Container do
         end
 
         it 'should be an array of length requested' do
-          expect(cloud_container.list(max: max).length).to eql(max)
+          expect(cloud_container.list(max: max).length).to eq(max)
         end
 
         it 'should log what it has done when complete' do
@@ -379,7 +379,7 @@ describe Raca::Container do
         end
 
         it 'should be an array of length found by cloud_request' do
-          expect(cloud_container.list(max: max).length).to eql(1)
+          expect(cloud_container.list(max: max).length).to eq(1)
         end
 
         it 'should log what it has done when complete' do
@@ -406,7 +406,7 @@ describe Raca::Container do
         end
 
         it 'should be an array of length found by cloud_request' do
-          expect(cloud_container.list(max: max).length).to eql(10001)
+          expect(cloud_container.list(max: max).length).to eq(10001)
         end
 
         it 'should log what it has done when complete' do
@@ -431,7 +431,7 @@ describe Raca::Container do
         end
 
         it 'should be an array of length found by cloud_request' do
-          expect(cloud_container.list(max: max, prefix: prefix).length).to eql(1)
+          expect(cloud_container.list(max: max, prefix: prefix).length).to eq(1)
         end
 
         it 'should log what it has done when complete' do
@@ -464,7 +464,7 @@ describe Raca::Container do
         end
 
         it 'should be an array of length found by cloud_request' do
-          expect(cloud_container.list(max: max, details: true).length).to eql(1)
+          expect(cloud_container.list(max: max, details: true).length).to eq(1)
         end
 
         it 'should be an array of hashes with appropriate data' do
@@ -503,7 +503,7 @@ describe Raca::Container do
         end
 
         it 'should be an array of length found by cloud_request' do
-          expect(cloud_container.list(max: max, details: true).length).to eql(10001)
+          expect(cloud_container.list(max: max, details: true).length).to eq(10001)
         end
 
         it 'should log what it has done when complete' do
@@ -533,7 +533,7 @@ describe Raca::Container do
         end
 
         it 'should return an array of search results' do
-          expect(cloud_container.search(search_term).length).to eql(3)
+          expect(cloud_container.search(search_term).length).to eq(3)
         end
       end
 
@@ -550,7 +550,7 @@ describe Raca::Container do
         end
 
         it 'should return an empty array of search results' do
-          expect(cloud_container.search(search_term)).to eql([])
+          expect(cloud_container.search(search_term)).to eq([])
         end
       end
     end
@@ -576,7 +576,7 @@ describe Raca::Container do
         end
 
         it 'should return a hash containing the number of objects, total bytes used and custom metadata' do
-          expect(cloud_container.metadata).to eql({
+          expect(cloud_container.metadata).to eq({
             :objects => 5,
             :bytes => 1200,
             :custom => {"X-Container-Meta-Access-Control-Allow-Origin" => "*"}
@@ -601,7 +601,7 @@ describe Raca::Container do
         end
 
         it 'should return a hash containing the number of objects and the total bytes used' do
-          expect(cloud_container.metadata).to eql({:objects => 5, :bytes => 1200, :custom => {}})
+          expect(cloud_container.metadata).to eq({:objects => 5, :bytes => 1200, :custom => {}})
         end
       end
     end
