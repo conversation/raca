@@ -317,7 +317,7 @@ describe Raca::Container do
         end
 
         after(:each) do
-          File.delete(filepath) if File.exists?(filepath)
+          File.delete(filepath) if File.exist?(filepath)
         end
       end
 
