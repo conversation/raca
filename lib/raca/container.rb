@@ -211,7 +211,7 @@ module Raca
 
     def private_url(method, object_key, temp_url_key, expires_at)
       raise ArgumentError, "method must be GET or PUT" unless %w{GET PUT}.include?(method)
-      digest = OpenSSL::Digest::Digest.new('sha1')
+      digest = OpenSSL::Digest.new('sha1')
 
       expires = expires_at.to_i
       path    = File.join(container_path, object_key)
