@@ -189,8 +189,14 @@ module Raca
     # Generate an expiring URL for downloading a file that is otherwise private.
     # Useful for providing temporary access to files.
     #
-    def expiring_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
+    def temp_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
       private_url("GET", object_key, temp_url_key, expires_at)
+    end
+
+    # DEPRECATED: use temp_url instead, this will be removed in version 1.0
+    #
+    def expiring_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
+      temp_url(object_key, temp_url_key, expires_at)
     end
 
     # Generate a temporary URL for uploading a file to a private container. Anyone

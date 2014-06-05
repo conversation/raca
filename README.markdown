@@ -112,7 +112,7 @@ is the temp URL key that can be set using Raca::Containers#set_temp_url_key
     ord_containers = account.containers(:ord)
     ord_containers.set_temp_url_key("secret")
     dir = ord_containers.get("container_name")
-    puts dir.expiring_url("remote_key.txt", "secret", Time.now.to_i + 60)
+    puts dir.temp_url("remote_key.txt", "secret", Time.now.to_i + 60)
 
 ### Cloud Servers
 
