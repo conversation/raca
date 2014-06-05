@@ -330,7 +330,7 @@ describe Raca::Container do
         it 'should bubble up the same error' do
           expect(logger).to receive(:debug).with('downloading key from /account/test')
           expect {
-            cloud_container.download('key', @filepath)
+            cloud_container.download('key', "/tmp/somefile")
           }.to raise_error(Raca::NotFoundError)
         end
       end
