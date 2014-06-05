@@ -186,13 +186,33 @@ module Raca
       (200..299).cover?(response.code.to_i)
     end
 
-    # Generate a expiring URL for a file that is otherwise private. useful for providing temporary
-    # access to files.
+    # Generate an expiring URL for downloading a file that is otherwise private.
+    # Useful for providing temporary access to files.
+    #
+    def temp_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
+      private_url("GET", object_key, temp_url_key, expires_at)
+    end
+
+    # DEPRECATED: use temp_url instead, this will be removed in version 1.0
     #
     def expiring_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
+      temp_url(object_key, temp_url_key, expires_at)
+    end
+
+    # Generate a temporary URL for uploading a file to a private container. Anyone
+    # can perform a PUT request to the URL returned from this method and an object
+    # will be created in the container.
+    #
+    def temp_upload_url(object_key, temp_url_key, expires_at = Time.now.to_i + 60)
+      private_url("PUT", object_key, temp_url_key, expires_at)
+    end
+
+    private
+
+    def private_url(method, object_key, temp_url_key, expires_at)
+      raise ArgumentError, "method must be GET or PUT" unless %w{GET PUT}.include?(method)
       digest = OpenSSL::Digest::Digest.new('sha1')
 
-      method  = 'GET'
       expires = expires_at.to_i
       path    = File.join(container_path, object_key)
       encoded_path = File.join(container_path, Raca::Util.url_encode(object_key))
@@ -203,8 +223,6 @@ module Raca
 
       "https://#{storage_host}#{encoded_path}?temp_url_sig=#{hmac.hexdigest}&temp_url_expires=#{expires}"
     end
-
-    private
 
     # build the request path for listing the contents of a container
     #
