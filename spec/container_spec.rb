@@ -242,7 +242,7 @@ describe Raca::Container do
       end
 
       it 'should return true' do
-        expect(cloud_container.delete('key')).to eq(true)
+        expect(cloud_container.delete('key')).to be true
       end
     end
 
