@@ -564,6 +564,7 @@ describe Raca::Container do
           response = Net::HTTPSuccess.new("1.1", 200, "OK")
           response.add_field('X-Container-Object-Count', '5')
           response.add_field('X-Container-Bytes-Used', '1200')
+          response.add_field('X-Container-Meta-Access-Control-Allow-Origin', '*')
           storage_client.should_receive(:head).with("/account/test").and_return(
             response
           )
@@ -574,8 +575,12 @@ describe Raca::Container do
           cloud_container.metadata
         end
 
-        it 'should return a hash containing the number of objects and the total bytes used' do
-          cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
+        it 'should return a hash containing the number of objects, total bytes used and custom metadata' do
+          cloud_container.metadata.should eql({
+            :objects => 5,
+            :bytes => 1200,
+            :custom => {"X-Container-Meta-Access-Control-Allow-Origin" => "*"}
+          })
         end
       end
       context "with a container name containing spaces" do
@@ -596,7 +601,7 @@ describe Raca::Container do
         end
 
         it 'should return a hash containing the number of objects and the total bytes used' do
-          cloud_container.metadata.should eql({:objects => 5, :bytes => 1200})
+          cloud_container.metadata.should eql({:objects => 5, :bytes => 1200, :custom => {}})
         end
       end
     end

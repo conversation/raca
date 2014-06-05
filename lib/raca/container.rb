@@ -151,10 +151,31 @@ module Raca
     def metadata
       log "retrieving container metadata from #{container_path}"
       response = storage_client.head(container_path)
+      custom = {}
+      response.each_capitalized_name { |name|
+        custom[name] = response[name] if name[/\AX-Container-Meta-/]
+      }
       {
         :objects => response["X-Container-Object-Count"].to_i,
-        :bytes => response["X-Container-Bytes-Used"].to_i
+        :bytes => response["X-Container-Bytes-Used"].to_i,
+        :custom => custom,
       }
+    end
+
+    # Set metadata headers on the container
+    #
+    #     headers = { "X-Container-Meta-Access-Control-Allow-Origin" => "*" }
+    #     container.set_metadata(headers)
+    #
+    # Note: Rackspace requires some headers to begin with 'X-Container-Meta-' or other prefixes, e.g. when setting
+    #       'Access-Control-Allow-Origin', it needs to be set as 'X-Container-Meta-Access-Control-Allow-Origin'.
+    # See:  http://docs.rackspace.com/files/api/v1/cf-devguide/content/CORS_Container_Header-d1e1300.html
+    #       http://docs.rackspace.com/files/api/v1/cf-devguide/content/POST_updateacontainermeta_v1__account___container__containerServicesOperations_d1e000.html
+    #
+    def set_metadata(headers)
+      log "setting headers for container #{container_path}"
+      response = storage_client.post(container_path, '', headers)
+      (200..299).cover?(response.code.to_i)
     end
 
     # Return the key details for CDN access to this container. Can be called
