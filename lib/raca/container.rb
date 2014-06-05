@@ -90,14 +90,14 @@ module Raca
     def download(key, filepath)
       log "downloading #{key} from #{container_path}"
       object_path = File.join(container_path, Raca::Util.url_encode(key))
-      response = storage_client.get(object_path) do |response|
+      outer_response = storage_client.get(object_path) do |response|
         File.open(filepath, 'wb') do |io|
           response.read_body do |chunk|
             io.write(chunk)
           end
         end
       end
-      response["Content-Length"].to_i
+      outer_response["Content-Length"].to_i
     end
 
     # Return an array of files in the container.
