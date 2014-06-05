@@ -3,10 +3,10 @@ require 'spec_helper'
 describe Raca::HttpClient do
   let!(:account) {
     double(Raca::Account).tap { |account|
-      account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-      account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-      account.stub(:auth_token).and_return('token')
-      account.stub(:refresh_cache).and_return(true)
+      allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+      allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+      allow(account).to receive(:auth_token).and_return('token')
+      allow(account).to receive(:refresh_cache).and_return(true)
     }
   }
   let!(:client) {
@@ -23,7 +23,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.get("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.get("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -35,7 +35,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.get("/foo", 'Content-Type' => 'text/plain').should be_a(Net::HTTPSuccess)
+          expect(client.get("/foo", 'Content-Type' => 'text/plain')).to be_a(Net::HTTPSuccess)
         end
       end
       context "with a block" do
@@ -46,10 +46,10 @@ describe Raca::HttpClient do
       context "with no headers" do
         let!(:account) {
           double(Raca::Account).tap { |account|
-            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-            account.stub(:auth_token).and_return('stale_token','fresh_token')
-            account.stub(:refresh_cache).and_return(true)
+            allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            allow(account).to receive(:auth_token).and_return('stale_token','fresh_token')
+            allow(account).to receive(:refresh_cache).and_return(true)
           }
         }
         let!(:client) {
@@ -66,8 +66,8 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.get("/foo").should be_a(Net::HTTPSuccess)
-          client.get("/foo").body.should == "FooBar"
+          expect(client.get("/foo")).to be_a(Net::HTTPSuccess)
+          expect(client.get("/foo").body).to eq("FooBar")
         end
       end
     end
@@ -79,9 +79,9 @@ describe Raca::HttpClient do
       end
 
       it "should transparently re-try and return Net::HTTPSuccess" do
-        lambda {
+        expect {
           client.get("/foo")
-        }.should raise_error(Timeout::Error)
+        }.to raise_error(Timeout::Error)
       end
     end
   end
@@ -96,7 +96,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.head("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.head("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -108,7 +108,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.head("/foo", 'Content-Type' => 'text/plain').should be_a(Net::HTTPSuccess)
+          expect(client.head("/foo", 'Content-Type' => 'text/plain')).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -116,10 +116,10 @@ describe Raca::HttpClient do
       context "with no headers" do
         let!(:account) {
           double(Raca::Account).tap { |account|
-            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-            account.stub(:auth_token).and_return('stale_token','fresh_token')
-            account.stub(:refresh_cache).and_return(true)
+            allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            allow(account).to receive(:auth_token).and_return('stale_token','fresh_token')
+            allow(account).to receive(:refresh_cache).and_return(true)
           }
         }
         let!(:client) {
@@ -136,7 +136,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.head("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.head("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -152,7 +152,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.delete("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.delete("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -164,7 +164,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.delete("/foo", 'Content-Type' => 'text/plain').should be_a(Net::HTTPSuccess)
+          expect(client.delete("/foo", 'Content-Type' => 'text/plain')).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -172,10 +172,10 @@ describe Raca::HttpClient do
       context "with no headers" do
         let!(:account) {
           double(Raca::Account).tap { |account|
-            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-            account.stub(:auth_token).and_return('stale_token','fresh_token')
-            account.stub(:refresh_cache).and_return(true)
+            allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            allow(account).to receive(:auth_token).and_return('stale_token','fresh_token')
+            allow(account).to receive(:refresh_cache).and_return(true)
           }
         }
         let!(:client) {
@@ -192,7 +192,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.delete("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.delete("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -208,7 +208,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.put("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.put("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -220,7 +220,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.put("/foo", 'Content-Type' => 'text/plain').should be_a(Net::HTTPSuccess)
+          expect(client.put("/foo", 'Content-Type' => 'text/plain')).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -228,10 +228,10 @@ describe Raca::HttpClient do
       context "with no headers" do
         let!(:account) {
           double(Raca::Account).tap { |account|
-            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-            account.stub(:auth_token).and_return('stale_token','fresh_token')
-            account.stub(:refresh_cache).and_return(true)
+            allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            allow(account).to receive(:auth_token).and_return('stale_token','fresh_token')
+            allow(account).to receive(:refresh_cache).and_return(true)
           }
         }
         let!(:client) {
@@ -248,7 +248,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.put("/foo").should be_a(Net::HTTPSuccess)
+          expect(client.put("/foo")).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -265,7 +265,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.streaming_put("/foo", StringIO.new("Body"), 4).should be_a(Net::HTTPSuccess)
+          expect(client.streaming_put("/foo", StringIO.new("Body"), 4)).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -278,7 +278,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.streaming_put("/foo", StringIO.new("Body"), 4, 'Content-Type' => 'text/plain').should be_a(Net::HTTPSuccess)
+          expect(client.streaming_put("/foo", StringIO.new("Body"), 4, 'Content-Type' => 'text/plain')).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -286,10 +286,10 @@ describe Raca::HttpClient do
       context "with no headers" do
         let!(:account) {
           double(Raca::Account).tap { |account|
-            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-            account.stub(:auth_token).and_return('stale_token','fresh_token')
-            account.stub(:refresh_cache).and_return(true)
+            allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            allow(account).to receive(:auth_token).and_return('stale_token','fresh_token')
+            allow(account).to receive(:refresh_cache).and_return(true)
           }
         }
         let!(:client) {
@@ -308,7 +308,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.streaming_put("/foo", StringIO.new("Body"), 4).should be_a(Net::HTTPSuccess)
+          expect(client.streaming_put("/foo", StringIO.new("Body"), 4)).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -325,7 +325,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.post("/foo", "Body").should be_a(Net::HTTPSuccess)
+          expect(client.post("/foo", "Body")).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -338,7 +338,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.post("/foo", nil).should be_a(Net::HTTPSuccess)
+          expect(client.post("/foo", nil)).to be_a(Net::HTTPSuccess)
         end
       end
 
@@ -351,7 +351,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.post("/foo", "Body", 'Content-Type' => 'text/plain').should be_a(Net::HTTPSuccess)
+          expect(client.post("/foo", "Body", 'Content-Type' => 'text/plain')).to be_a(Net::HTTPSuccess)
         end
       end
     end
@@ -359,10 +359,10 @@ describe Raca::HttpClient do
       context "with no headers" do
         let!(:account) {
           double(Raca::Account).tap { |account|
-            account.stub(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
-            account.stub(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
-            account.stub(:auth_token).and_return('stale_token','fresh_token')
-            account.stub(:refresh_cache).and_return(true)
+            allow(account).to receive(:public_endpoint).with("cloudFiles", :ord).and_return("https://the-cloud.com/account")
+            allow(account).to receive(:public_endpoint).with("cloudFilesCDN", :ord).and_return("https://cdn.the-cloud.com/account")
+            allow(account).to receive(:auth_token).and_return('stale_token','fresh_token')
+            allow(account).to receive(:refresh_cache).and_return(true)
           }
         }
         let!(:client) {
@@ -381,7 +381,7 @@ describe Raca::HttpClient do
         end
 
         it "should return Net::HTTPSuccess" do
-          client.post("/foo", "Body").should be_a(Net::HTTPSuccess)
+          expect(client.post("/foo", "Body")).to be_a(Net::HTTPSuccess)
         end
       end
     end
