@@ -2,6 +2,8 @@ XXX (XXX)
 * Added Raca::Container#temp_upload_url
 * Renamed Raca::Container#expiring_url to Raca::Container#temp_url
   * the old method still exists for now but is deprecated
+* Expand Raca::Container#metadata to include custom metadata
+* Added raca::Container#set_metadata
 
 v0.3.3 (26th April 2014)
 * Added a User-Agent header to all requests
