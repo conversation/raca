@@ -624,7 +624,7 @@ describe Raca::Container do
         end
 
         it 'should return true' do
-          expect(cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*")).to be_truthy
+          expect(cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*")).to eq true
         end
       end
       context "with a container name containing spaces" do
@@ -643,7 +643,7 @@ describe Raca::Container do
         end
 
         it 'should return true' do
-          expect(cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*")).to be_truthy
+          expect(cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*")).to eq true
         end
       end
     end

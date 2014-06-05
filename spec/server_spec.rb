@@ -77,7 +77,7 @@ describe Raca::Server do
       let!(:server) { Raca::Server.new(account, :ord, "123") }
 
       it 'should return true' do
-        expect(server.delete!).to be_truthy
+        expect(server.delete!).to eq true
       end
     end
 
