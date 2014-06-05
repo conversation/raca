@@ -606,6 +606,48 @@ describe Raca::Container do
       end
     end
 
+    describe '#set_metadata' do
+      before(:each) do
+        account.should_receive(:http_client).with("the-cloud.com").and_return(storage_client)
+      end
+      context "with a simple container name" do
+        before(:each) do
+          response = Net::HTTPSuccess.new("1.1", 200, "OK")
+          storage_client.should_receive(:post).with("/account/test", "", {"X-Container-Meta-Access-Control-Allow-Origin" => "*"}).and_return(
+            response
+          )
+        end
+
+        it 'should log what it indends to do' do
+          logger.should_receieve(:debug).with('setting headerss from /account/test')
+          cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*")
+        end
+
+        it 'should return true' do
+          cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*").should be_true
+        end
+      end
+      context "with a container name containing spaces" do
+        let!(:cloud_container) { Raca::Container.new(account, :ord, 'foo bar') }
+
+        before(:each) do
+          response = Net::HTTPSuccess.new("1.1", 200, "OK")
+          storage_client.should_receive(:post).with("/account/foo%20bar", "", {"X-Container-Meta-Access-Control-Allow-Origin" => "*"}).and_return(
+            response
+          )
+        end
+
+        it 'should log what it indends to do' do
+          logger.should_receieve(:debug).with('setting headerss from /account/foo%20bar')
+          cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*")
+        end
+
+        it 'should return true' do
+          cloud_container.set_metadata("X-Container-Meta-Access-Control-Allow-Origin" => "*").should be_true
+        end
+      end
+    end
+
     describe '#cdn_metadata' do
       before(:each) do
         account.should_receive(:http_client).with("cdn.the-cloud.com").and_return(cdn_client)
