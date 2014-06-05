@@ -242,7 +242,7 @@ describe Raca::Container do
       end
 
       it 'should return true' do
-        result = expect(cloud_container.delete('key')).to eq(true)
+        expect(cloud_container.delete('key')).to eq(true)
       end
     end
 
@@ -261,7 +261,7 @@ describe Raca::Container do
       end
 
       it 'should return true' do
-        result = expect(cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au')).to eq(true)
+        expect(cloud_container.purge_from_akamai('key', 'services@theconversation.edu.au')).to eq(true)
       end
     end
 
