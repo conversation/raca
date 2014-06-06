@@ -4,9 +4,9 @@ require 'webmock/rspec'
 describe Raca::Server do
   let!(:account) {
     info = double(Raca::Account)
-    info.stub(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
-    info.stub(:auth_token).and_return('token')
-    info.stub(:refresh_cache).and_return(true)
+    allow(info).to receive(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
+    allow(info).to receive(:auth_token).and_return('token')
+    allow(info).to receive(:refresh_cache).and_return(true)
     info
   }
   let!(:http_client) { Raca::HttpClient.new(account, "the-cloud.com") }
@@ -19,7 +19,7 @@ describe Raca::Server do
       }
 
       it 'should set the server_id atttribute' do
-        server.server_id.should == "123"
+        expect(server.server_id).to eq("123")
       end
     end
 
@@ -27,9 +27,9 @@ describe Raca::Server do
 
   describe '#details' do
     before(:each) do
-      account.stub(:http_client).and_return(http_client)
+      allow(account).to receive(:http_client).and_return(http_client)
 
-      http_client.should_receive(:get).with("/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json').and_return(
+      expect(http_client).to receive(:get).with("/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json').and_return(
       double("Net::HTTPSuccess",
               body: JSON.dump(
                 {server:
@@ -56,8 +56,8 @@ describe Raca::Server do
 
       it 'should return a hash of interesting data' do
         server.details.tap { |result|
-          result.should be_a(Hash)
-          result["status"].should == "ACTIVE"
+          expect(result).to be_a(Hash)
+          expect(result["status"]).to eq("ACTIVE")
         }
       end
     end
@@ -66,9 +66,9 @@ describe Raca::Server do
   describe '#delete!' do
 
     before(:each) do
-      account.stub(:http_client).and_return(http_client)
+      allow(account).to receive(:http_client).and_return(http_client)
 
-      http_client.should_receive(:delete).with("/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json').and_return(
+      expect(http_client).to receive(:delete).with("/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json').and_return(
         Net::HTTPNoContent.new("1.1", "204", "OK")
       )
     end
@@ -77,7 +77,7 @@ describe Raca::Server do
       let!(:server) { Raca::Server.new(account, :ord, "123") }
 
       it 'should return true' do
-        server.delete!.should be_true
+        expect(server.delete!).to eq true
       end
     end
 

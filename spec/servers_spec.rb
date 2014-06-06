@@ -4,15 +4,15 @@ require 'webmock/rspec'
 describe Raca::Servers do
   let!(:account) {
     info = double(Raca::Account)
-    info.stub(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
-    info.stub(:auth_token).and_return('token')
-    info.stub(:refresh_cache).and_return(true)
+    allow(info).to receive(:public_endpoint).with("cloudServersOpenStack", :ord).and_return("https://the-cloud.com/account")
+    allow(info).to receive(:auth_token).and_return('token')
+    allow(info).to receive(:refresh_cache).and_return(true)
     info
   }
   let!(:http_client) { Raca::HttpClient.new(account, "the-cloud.com") }
 
   before(:each) do
-    account.stub(:http_client).and_return(http_client)
+    allow(account).to receive(:http_client).and_return(http_client)
   end
 
   describe '#create' do
@@ -50,51 +50,51 @@ describe Raca::Servers do
 
       context "when passed an invalid flavor" do
         before do
-          http_client.should_receive(:get).with(
+          expect(http_client).to receive(:get).with(
             "/account/flavors", "Content-Type" => "application/json", "Accept" => "application/json"
           ).and_return(flavours_response)
-          http_client.should_receive(:get).with(
+          expect(http_client).to receive(:get).with(
             "/account/images", "Content-Type" => "application/json", "Accept" => "application/json"
           ).and_return(images_response)
         end
 
         it 'should raise an exception' do
-          lambda {
+          expect {
             servers.create("server1", 1024, "LTS")
-          }.should raise_error(ArgumentError)
+          }.to raise_error(ArgumentError)
         end
       end
 
       context "when passed an invalid image" do
         before do
-          http_client.should_receive(:get).with(
+          expect(http_client).to receive(:get).with(
             "/account/images", "Content-Type" => "application/json", "Accept" => "application/json"
           ).and_return(images_response)
         end
         it 'should raise an exception' do
-          lambda {
+          expect {
             servers.create("server1", 256, "RedHat")
-          }.should raise_error(ArgumentError)
+          }.to raise_error(ArgumentError)
         end
       end
 
       context "when passed valid flavor and image" do
         before do
-          http_client.should_receive(:get).with(
+          expect(http_client).to receive(:get).with(
             "/account/flavors", "Content-Type" => "application/json", "Accept" => "application/json"
           ).and_return(flavours_response)
-          http_client.should_receive(:get).with(
+          expect(http_client).to receive(:get).with(
             "/account/images", "Content-Type" => "application/json", "Accept" => "application/json"
           ).and_return(images_response)
           post_body = JSON.dump({server: {name: "server1", imageRef: 112, flavorRef: 1}})
-          http_client.should_receive(:post).with(
+          expect(http_client).to receive(:post).with(
             "/account/servers", post_body, "Content-Type" => "application/json", "Accept" => "application/json"
           ).and_return(servers_response)
         end
         it 'should return a new Raca::Server with the correct ID' do
           server = servers.create("server1", 256, "LTS")
-          server.should be_a(Raca::Server)
-          server.server_id.should == 456
+          expect(server).to be_a(Raca::Server)
+          expect(server.server_id).to eq(456)
         end
       end
 

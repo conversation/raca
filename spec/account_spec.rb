@@ -13,7 +13,7 @@ describe Raca::Account do
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
-        info.auth_token.should == "thetoken"
+        expect(info.auth_token).to eq("thetoken")
       end
     end
     context "when the identity response isn't pre-cached" do
@@ -25,7 +25,7 @@ describe Raca::Account do
           .to_return(:status => 200, :body => api_response)
       end
       it "should request the value from rackspace" do
-        info.auth_token.should == "secret"
+        expect(info.auth_token).to eq("secret")
       end
     end
   end
@@ -36,7 +36,7 @@ describe Raca::Account do
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
-        info.public_endpoint("cloudFiles", "ORD").should == "https://storage101.ord1.clouddrive.com/v1/foobar"
+        expect(info.public_endpoint("cloudFiles", "ORD")).to eq("https://storage101.ord1.clouddrive.com/v1/foobar")
       end
     end
     context "when the storage url isn't pre-cached" do
@@ -49,7 +49,7 @@ describe Raca::Account do
       end
       it "should request the value from rackspace" do
         uri = "https://storage101.ord1.clouddrive.com/v1/MossoCloudFS_3788b1b9-4be1-4fae-9bea-fe5c532dbe47"
-        info.public_endpoint("cloudFiles", "ORD").should == uri
+        expect(info.public_endpoint("cloudFiles", "ORD")).to eq(uri)
       end
     end
   end
@@ -59,11 +59,11 @@ describe Raca::Account do
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
       it "should return the cached value" do
-        info.service_names.should =~ %w{
+        expect(info.service_names).to match_array(%w{
           cloudFilesCDN cloudFiles cloudServersOpenStack cloudBlockStorage
           cloudDatabases cloudDNS cloudLoadBalancers cloudMonitoring
           cloudQueues autoscale cloudBackup cloudServers
-        }
+        })
       end
     end
   end
