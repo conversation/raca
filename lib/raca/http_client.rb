@@ -65,6 +65,10 @@ module Raca
       cloud_request(request)
     end
 
+    def inspect
+      "#<Raca::HttpClient:#{__id__}>"
+    end
+
     private
 
     def build_streaming_put_request(path, io, byte_count, headers)

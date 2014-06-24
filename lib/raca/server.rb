@@ -53,6 +53,10 @@ module Raca
       JSON.parse(data)['server']
     end
 
+    def inspect
+      "#<Raca::Server:#{__id__} region=#{@region} server_id=#{@server_id}>"
+    end
+
     private
 
     def json_headers
