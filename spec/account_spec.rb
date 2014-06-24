@@ -35,8 +35,53 @@ describe Raca::Account do
       let!(:cache) { {"raca-theuser" => JSON.load(File.read(File.expand_path("../fixtures/identity_response_alt.json", __FILE__))) } }
       let!(:info) { Raca::Account.new(username, api_key, cache)}
 
-      it "should return the cached value" do
-        expect(info.public_endpoint("cloudFiles", "ORD")).to eq("https://storage101.ord1.clouddrive.com/v1/foobar")
+      context "when the requested API is regioned" do
+        context "and a region is provided" do
+          it "should return the cached value" do
+            expect(info.public_endpoint("cloudFiles", "ORD")).to eq("https://storage101.ord1.clouddrive.com/v1/foobar")
+          end
+        end
+        context "and a region is not provided" do
+          it "should raise an exception" do
+            expect {
+              info.public_endpoint("cloudFiles")
+            }.to raise_error(
+              ArgumentError, "The requested service exists in multiple regions, please specify a region code"
+            )
+          end
+        end
+      end
+      context "when the requested API is not regioned" do
+        context "and a region is not provided" do
+          it "should return the cached value" do
+            expect(info.public_endpoint("cloudDNS")).to eq("https://dns.api.rackspacecloud.com/v1.0/123456")
+          end
+        end
+        context "and a region is provided" do
+          it "should ignore the region and return the cached value" do
+            expect(info.public_endpoint("cloudDNS", "ORD")).to eq("https://dns.api.rackspacecloud.com/v1.0/123456")
+          end
+        end
+      end
+      context "when the requested API does not exist" do
+        context "and a region is not provided" do
+          it "should raise an exception" do
+            expect {
+              info.public_endpoint("cloudFoo")
+            }.to raise_error(
+              ArgumentError, "No matching services found"
+            )
+          end
+        end
+        context "and a region is provided" do
+          it "should raise an exception" do
+            expect {
+              info.public_endpoint("cloudFoo", "ORD")
+            }.to raise_error(
+              ArgumentError, "No matching services found"
+            )
+          end
+        end
       end
     end
     context "when the storage url isn't pre-cached" do
@@ -53,6 +98,7 @@ describe Raca::Account do
       end
     end
   end
+
   describe '#service_names' do
     context "when the identity response is pre-cached" do
       let!(:cache) { {"raca-theuser" => JSON.load(File.read(File.expand_path("../fixtures/identity_response.json", __FILE__))) } }

@@ -37,11 +37,26 @@ module Raca
     #     account = Raca::Account.new("username", "secret")
     #     puts account.public_endpoint("cloudServers", :syd)
     #
-    def public_endpoint(service_name, region)
-      region = region.to_s.upcase
+    # Some service APIs are not regioned. In those cases, the region code can be
+    # left off:
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.public_endpoint("cloudDNS")
+    #
+    def public_endpoint(service_name, region = nil)
       endpoints = service_endpoints(service_name)
-      regional_endpoint = endpoints.detect { |e| e["region"] == region } || {}
-      regional_endpoint["publicURL"]
+      if endpoints.size > 1 && region
+        region = region.to_s.upcase
+        endpoints = endpoints.select { |e| e["region"] == region } || {}
+      elsif endpoints.size > 1 && region.nil?
+        raise ArgumentError, "The requested service exists in multiple regions, please specify a region code"
+      end
+
+      if endpoints.size == 0
+        raise ArgumentError, "No matching services found"
+      else
+        endpoints.first["publicURL"]
+      end
     end
 
     # Return the names of the available services. As rackspace add new services and

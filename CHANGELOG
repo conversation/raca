@@ -4,6 +4,8 @@ XXX (XXX)
   * the old method still exists for now but is deprecated
 * Expand Raca::Container#metadata to include custom metadata
 * Added raca::Container#set_metadata
+* For non regioned APIs (like Cloud DNS) the region argument to Raca::Account#public_endpoint
+  can be left off
 
 v0.3.3 (26th April 2014)
 * Added a User-Agent header to all requests
