@@ -1,7 +1,3 @@
-* region argument to Account#public_endpoint should be optional. Raise
-  an error if the requested service requires a region. Choose the global
-  endpoint if the requested service has no regions.
-
 * consider adding a servicenet option to the Raca::Account constructor. It
   would default to false. If true, then all service endpoints returned would
   be for the private rackspace servicenet. Maybe also rename
@@ -11,6 +7,3 @@
 * reduce duplication in logging
 
 * Consider adding more response details to our HTTPError classes. Status code, etc
-
-* Is it possible to created signed URLs for uploading files? Could be a nifty way
-  to allow users to upload images directly from the browser
