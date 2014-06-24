@@ -131,6 +131,10 @@ module Raca
       Raca::HttpClient.new(self, hostname)
     end
 
+    def inspect
+      "#<Raca::Account:#{__id__} username=#{@username}>"
+    end
+
     private
 
     def raise_on_error(response)

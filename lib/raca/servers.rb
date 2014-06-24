@@ -61,6 +61,10 @@ module Raca
       Raca::Server.new(@account, @region, data['id'])
     end
 
+    def inspect
+      "#<Raca::Servers:#{__id__} region=#{@region}>"
+    end
+
     private
 
     def json_headers

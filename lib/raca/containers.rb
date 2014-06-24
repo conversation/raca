@@ -45,6 +45,10 @@ module Raca
       (200..299).cover?(response.code.to_i)
     end
 
+    def inspect
+      "#<Raca::Containers:#{__id__} region=#{@region}>"
+    end
+
     private
 
     def storage_host

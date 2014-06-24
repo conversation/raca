@@ -228,6 +228,10 @@ module Raca
       private_url("PUT", object_key, temp_url_key, expires_at)
     end
 
+    def inspect
+      "#<Raca::Container:#{__id__} region=#{@region} container_name=#{@container_name}>"
+    end
+
     private
 
     def private_url(method, object_key, temp_url_key, expires_at)
