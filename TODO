@@ -7,3 +7,6 @@
 * reduce duplication in logging
 
 * Consider adding more response details to our HTTPError classes. Status code, etc
+
+* Consider adding an #each method to collection classs (Containers, Users,
+  Servers, etc) and mixing in Enumerable.
