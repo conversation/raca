@@ -6,6 +6,7 @@ XXX (XXX)
 * Added raca::Container#set_metadata
 * For non regioned APIs (like Cloud DNS) the region argument to Raca::Account#public_endpoint
   can be left off
+* Added read access to user accounts via Raca::Account#users
 
 v0.3.3 (26th April 2014)
 * Added a User-Agent header to all requests

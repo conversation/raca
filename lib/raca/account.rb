@@ -97,6 +97,16 @@ module Raca
       Raca::Servers.new(self, region)
     end
 
+    # Return a Raca::Users object. Use this to query and manage the users associated
+    # with the current account.
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.users
+    #
+    def users
+      Raca::Users.new(self)
+    end
+
     # Raca classes use this method to occasionally re-authenticate with the rackspace
     # servers. You can probably ignore it.
     #
