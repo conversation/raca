@@ -44,6 +44,8 @@ module Raca
     #     puts account.public_endpoint("cloudDNS")
     #
     def public_endpoint(service_name, region = nil)
+      return "https://identity.api.rackspacecloud.com/v2.0/" if service_name == "identity"
+
       endpoints = service_endpoints(service_name)
       if endpoints.size > 1 && region
         region = region.to_s.upcase
