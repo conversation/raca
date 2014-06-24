@@ -11,6 +11,7 @@ set -x
 
 # prepare the repository state, laod dependencies, etc
 ruby -v
+hostname
 bundle check || bundle --local --path=vendor/bundle  || bundle --path=vendor/bundle
 
 # .. and now start the build
