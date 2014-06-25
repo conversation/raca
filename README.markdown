@@ -133,6 +133,21 @@ You can use the collection to create a brand new server:
 
     a_server = ord_servers.create("server_name", "1Gb", "Ubuntu 10.04 LTS")
 
+### Users
+
+Using an existing Raca::Account object, retrieve a collection of Users like so:
+
+    users = account.users
+
+You can retrieve an existing user from the collection:
+
+    a_user = users.get("username")
+
+You can display details for each user with the details method:
+
+    a_user = users.get("username")
+    a_user.details
+
 ## General API principles
 
 Methods that make calls to an API should never return a raw HTTP response

@@ -83,6 +83,11 @@ describe Raca::Account do
           end
         end
       end
+      context "when the requested API is 'identity'" do
+        it "should return the correct value" do
+          expect(info.public_endpoint("identity")).to eq("https://identity.api.rackspacecloud.com/v2.0/")
+        end
+      end
     end
     context "when the storage url isn't pre-cached" do
       let!(:info) { Raca::Account.new(username, api_key, {})}

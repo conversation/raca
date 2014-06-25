@@ -8,6 +8,7 @@ module Raca
   # the supported rackspace APIs.
   #
   class Account
+    IDENTITY_URL = "https://identity.api.rackspacecloud.com/v2.0/"
 
     def initialize(username, key, cache = nil)
       @username, @key, @cache = username, key, cache
@@ -44,6 +45,8 @@ module Raca
     #     puts account.public_endpoint("cloudDNS")
     #
     def public_endpoint(service_name, region = nil)
+      return IDENTITY_URL if service_name == "identity"
+
       endpoints = service_endpoints(service_name)
       if endpoints.size > 1 && region
         region = region.to_s.upcase
@@ -95,13 +98,23 @@ module Raca
       Raca::Servers.new(self, region)
     end
 
+    # Return a Raca::Users object. Use this to query and manage the users associated
+    # with the current account.
+    #
+    #     account = Raca::Account.new("username", "secret")
+    #     puts account.users
+    #
+    def users
+      Raca::Users.new(self)
+    end
+
     # Raca classes use this method to occasionally re-authenticate with the rackspace
     # servers. You can probably ignore it.
     #
     def refresh_cache
       # Raca::HttpClient depends on Raca::Account, so we intentionally don't use it here
       # to avoid a circular dependency
-      Net::HTTP.new('identity.api.rackspacecloud.com', 443).tap {|http|
+      Net::HTTP.new(identity_host, 443).tap {|http|
         http.use_ssl = true
       }.start {|http|
         payload = {
@@ -113,7 +126,7 @@ module Raca
           }
         }
         response = http.post(
-          '/v2.0/tokens',
+          tokens_path,
           JSON.dump(payload),
           {'Content-Type' => 'application/json'},
         )
@@ -136,6 +149,18 @@ module Raca
     end
 
     private
+
+    def identity_host
+      URI.parse(IDENTITY_URL).host
+    end
+
+    def identity_path
+      URI.parse(IDENTITY_URL).path
+    end
+
+    def tokens_path
+      File.join(identity_path, "tokens")
+    end
 
     def raise_on_error(response)
       error_klass = case response.code.to_i
