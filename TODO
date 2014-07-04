@@ -10,3 +10,6 @@
 
 * Consider adding an #each method to collection classs (Containers, Users,
   Servers, etc) and mixing in Enumerable.
+
+* Call to_s on HTTP header keys and values provided by the user, Net::HTTP expects them
+  to all be strings and we can't trust user input. Can this go in Raca::HttpClient?
