@@ -170,7 +170,8 @@ module Raca
     # Note: Rackspace requires some headers to begin with 'X-Container-Meta-' or other prefixes, e.g. when setting
     #       'Access-Control-Allow-Origin', it needs to be set as 'X-Container-Meta-Access-Control-Allow-Origin'.
     # See:  http://docs.rackspace.com/files/api/v1/cf-devguide/content/CORS_Container_Header-d1e1300.html
-    #       http://docs.rackspace.com/files/api/v1/cf-devguide/content/POST_updateacontainermeta_v1__account___container__containerServicesOperations_d1e000.html
+    #       http://docs.rackspace.com/files/api/v1/cf-devguide/content/
+    #         POST_updateacontainermeta_v1__account___container__containerServicesOperations_d1e000.html
     #
     def set_metadata(headers)
       log "setting headers for container #{container_path}"

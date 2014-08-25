@@ -29,9 +29,11 @@ describe Raca::Server do
     before(:each) do
       allow(account).to receive(:http_client).and_return(http_client)
 
-      expect(http_client).to receive(:get).with("/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json').and_return(
-      double("Net::HTTPSuccess",
-              body: JSON.dump(
+      expect(http_client).to receive(:get).with(
+        "/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json'
+      ).and_return(
+        double("Net::HTTPSuccess",
+                body: JSON.dump(
                 {server:
                  {progress:100,
                   id:123,
@@ -68,7 +70,9 @@ describe Raca::Server do
     before(:each) do
       allow(account).to receive(:http_client).and_return(http_client)
 
-      expect(http_client).to receive(:delete).with("/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json').and_return(
+      expect(http_client).to receive(:delete).with(
+        "/account/servers/123", 'Accept'=>'application/json', 'Content-Type'=>'application/json'
+      ).and_return(
         Net::HTTPNoContent.new("1.1", "204", "OK")
       )
     end

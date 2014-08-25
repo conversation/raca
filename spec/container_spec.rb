@@ -632,7 +632,9 @@ describe Raca::Container do
 
         before(:each) do
           response = Net::HTTPSuccess.new("1.1", 200, "OK")
-          expect(storage_client).to receive(:post).with("/account/foo%20bar", "", {"X-Container-Meta-Access-Control-Allow-Origin" => "*"}).and_return(
+          expect(storage_client).to receive(:post).with(
+            "/account/foo%20bar", "", {"X-Container-Meta-Access-Control-Allow-Origin" => "*"}
+          ).and_return(
             response
           )
         end
