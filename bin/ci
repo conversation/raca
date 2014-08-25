@@ -15,4 +15,4 @@ hostname
 bundle check || bundle --local --path=vendor/bundle  || bundle --path=vendor/bundle
 
 # .. and now start the build
-bundle exec rake spec
+bundle exec rake cane spec
