@@ -140,8 +140,11 @@ module Raca
     end
 
     def image_name_to_id(str)
-      image = images.detect {|row|
-        row['name'].downcase.include?(str.to_s.downcase)
+      str = str.to_s.downcase
+      image = images.detect { |row|
+        row['name'].downcase == str
+      } || images.detect { |row|
+        row['name'].downcase.include?(str)
       }
       if image
         image['id']
