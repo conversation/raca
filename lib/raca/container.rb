@@ -13,7 +13,7 @@ module Raca
   class Container
     MAX_ITEMS_PER_LIST = 10_000
     LARGE_FILE_THRESHOLD = 5_368_709_120 # 5 Gb
-    LARGE_FILE_SEGMENT_SIZE = 104_857_600 # 100 Mb
+    LARGE_FILE_SEGMENT_SIZE = 4_295_000_000 # 4 Gb
 
     attr_reader :container_name
 
