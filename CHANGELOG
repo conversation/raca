@@ -1,3 +1,7 @@
+v0.4.2 (19th July 2015)
+* Large files (> 5Gb) that are uploaded to cloud files are broken into 4Gb
+  chunks instead of 100Mb.
+
 v0.4.1 (8th October 2014)
 * Raca::Servers#create looks for an exact image name before falling back
   to a fuzzy match to allow precise selection of images.
