@@ -32,15 +32,14 @@ module Raca
     # manually specify content type, content disposition, CORS headers, etc.
     #
     def upload(key, data_or_path, headers = {})
-      case data_or_path
-      when StringIO, File
+      if data_or_path.respond_to?(:read) && data_or_path.respond_to?(:size)
         upload_io(key, data_or_path, data_or_path.size, headers)
-      when String
-        File.open(data_or_path, "rb") do |io|
+      elsif !File.file?(data_or_path.to_s)
+        raise ArgumentError, "data_or_path must be an IO with data or filename string"
+      else
+        File.open(data_or_path.to_s, "rb") do |io|
           upload_io(key, io, io.stat.size, headers)
         end
-      else
-        raise ArgumentError, "data_or_path must be an IO with data or filename string"
       end
     end
 
