@@ -275,7 +275,7 @@ module Raca
       if io.respond_to?(:path)
         headers['Content-Type'] ||= extension_content_type(io.path)
       end
-      headers['ETag']           = md5_io(io)
+      headers['ETag']           ||= md5_io(io)
       headers['Content-Type']   ||= "application/octet-stream"
       if content_type_needs_cors(key)
         headers['Access-Control-Allow-Origin'] = "*"
@@ -293,7 +293,7 @@ module Raca
         segment_key = "%s.%03d" % [key, segments.size]
         io.seek(start_pos)
         segment_io = StringIO.new(io.read(LARGE_FILE_SEGMENT_SIZE))
-        etag = upload_io_standard(segment_key, segment_io, segment_io.size, headers)
+        etag = upload_io_standard(segment_key, segment_io, segment_io.size, headers.reject { |k,_v| k == "ETag"})
         segments << {path: "#{@container_name}/#{segment_key}", etag: etag, size_bytes: segment_io.size}
       end
       full_path = File.join(container_path, Raca::Util.url_encode(key)) + "?multipart-manifest=put"
