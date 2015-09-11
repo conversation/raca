@@ -3,6 +3,10 @@ module Raca
   # Wrap an IO object and expose only a partial subset of the underlying data
   # in an IO-ish interface. Calling code will have access to the window of data
   # starting at 'offset' and the following 'length' bytes.
+  #
+  # This doesn't implement the entire IO contract, just enough to make it work
+  # when handed to Net::HTTP as a request body.
+  #
   class WindowedIO
     def initialize(io, offset, length)
       @io = io
