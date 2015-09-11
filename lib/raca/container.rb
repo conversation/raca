@@ -1,6 +1,7 @@
 require 'digest/md5'
 require 'openssl'
 require 'uri'
+require 'raca/windowed_io'
 
 module Raca
 
@@ -291,8 +292,7 @@ module Raca
       while segments.size < segment_count
         start_pos = 0 + (LARGE_FILE_SEGMENT_SIZE * segments.size)
         segment_key = "%s.%03d" % [key, segments.size]
-        io.seek(start_pos)
-        segment_io = StringIO.new(io.read(LARGE_FILE_SEGMENT_SIZE))
+        segment_io = WindowedIO.new(io, start_pos, LARGE_FILE_SEGMENT_SIZE)
         etag = upload_io_standard(segment_key, segment_io, segment_io.size, headers.reject { |k,_v| k == "ETag"})
         segments << {path: "#{@container_name}/#{segment_key}", etag: etag, size_bytes: segment_io.size}
       end
