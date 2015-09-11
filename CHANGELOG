@@ -1,3 +1,7 @@
+v0.4.3 (12th September 2015)
+* Use less memory when uploading large files (> 5Gb) to cloud files
+* Allow a pre-computed ETag header to be provided when uploading to cloud files
+
 v0.4.2 (19th July 2015)
 * Large files (> 5Gb) that are uploaded to cloud files are broken into 4Gb
   chunks instead of 100Mb.
