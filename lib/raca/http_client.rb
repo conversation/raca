@@ -93,25 +93,19 @@ module Raca
     #     end
     #
     def cloud_request(request, &block)
-      cloud_http do |http|
+      Net::HTTP.start(@hostname, 443, use_ssl: true, read_timeout: 70) do |http|
         request['X-Auth-Token'] = @account.auth_token
         request['User-Agent'] = "raca 0.4.4 (http://rubygems.org/gems/raca)"
-        http.request(request, &block)
-      end
-    end
-
-    def cloud_http(&block)
-      Net::HTTP.start(@hostname, 443, use_ssl: true, read_timeout: 70) do |http|
-        response = block.call(http)
+        response = http.request(request, &block)
         if response.is_a?(Net::HTTPSuccess)
           response
         else
-          raise_on_error(response)
+          raise_on_error(request, response)
         end
       end
     end
 
-    def raise_on_error(response)
+    def raise_on_error(request, response)
       error_klass = case response.code.to_i
       when 400 then BadRequestError
       when 401 then UnauthorizedError
@@ -120,7 +114,9 @@ module Raca
       else
         HTTPError
       end
-      raise error_klass, "Rackspace returned HTTP status #{response.code} (rackspace transaction id: #{response["X-TRANS-ID"]})"
+      msg = "Rackspace returned HTTP status #{response.code}"
+      msg += "(rackspace tx id: #{response["X-TRANS-ID"]}, #{request.method} #{request.path})"
+      raise error_klass, msg
     end
 
     def log(msg)
