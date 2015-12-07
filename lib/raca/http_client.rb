@@ -93,7 +93,7 @@ module Raca
     #     end
     #
     def cloud_request(request, &block)
-      Net::HTTP.start(@hostname, 443, use_ssl: true, read_timeout: 70) do |http|
+      Net::HTTP.start(@hostname, 443, use_ssl: true, read_timeout: 120) do |http|
         request['X-Auth-Token'] = @account.auth_token
         request['User-Agent'] = "raca 0.4.4 (http://rubygems.org/gems/raca)"
         response = http.request(request, &block)

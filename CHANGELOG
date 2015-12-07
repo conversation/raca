@@ -1,3 +1,6 @@
+v0.4.4 (XXX)
+* Increase read timeout on HTTP connections to 120s
+
 v0.4.3 (12th September 2015)
 * Use less memory when uploading large files (> 5Gb) to cloud files
 * Allow a pre-computed ETag header to be provided when uploading to cloud files
