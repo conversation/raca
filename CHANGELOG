@@ -1,4 +1,5 @@
 v0.4.4 (XXX)
+* Add extra detail to exception messages raised when a HTTP request fails
 * Increase read timeout on HTTP connections to 120s
 
 v0.4.3 (12th September 2015)
